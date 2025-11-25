@@ -35,37 +35,27 @@ const linksList = [
   {
     title: 'Directory',
     icon: 'contacts',
-    link: 'https://quasar.dev',
+    to: '/app/directory',
   },
   {
-    title: 'Upload Resources',
+    title: 'File Repository',
     icon: 'upload',
-    link: 'https://github.com/quasarframework',
+    to: '/app/repository',
   },
   {
     title: 'Calendar',
     icon: 'calendar_today',
-    link: 'https://chat.quasar.dev',
+    to: '/app/calendar',
   },
   {
     title: 'Services',
     icon: 'build',
-    link: 'https://forum.quasar.dev',
+    to: '/app/services',
   },
   {
-    title: 'Feed',
-    icon: 'web_stories',
-    link: 'https://twitter.quasar.dev',
-  },
-  {
-    title: 'Analytics',
-    icon: 'analytics',
-    link: 'https://facebook.quasar.dev',
-  },
-  {
-    title: 'Search',
-    icon: 'search',
-    link: 'https://awesome.quasar.dev',
+    title: 'Settings',
+    icon: 'settings',
+    to: '/app/settings',
   },
 ]
 
