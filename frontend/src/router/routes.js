@@ -11,11 +11,9 @@ const routes = [
     children: [
       { path: 'dashboard', component: () => import('src/pages/DashPage.vue') },
       { path: 'directory', component: () => import('src/pages/DirectoryPage.vue') },
-      { path: 'repository', component: () => import('src/pages/RepositoryPage.vue') },
       { path: 'calendar', component: () => import('src/pages/CalendarPage.vue') },
       { path: 'services', component: () => import('src/pages/TicketsPage.vue') },
-      { path: 'document', component: () => import('src/pages/DocumentsPage.vue') },
-      { path: 'settings', component: () => import('src/pages/SettingsPage.vue') }
+      { path: 'documents', component: () => import('src/pages/DocumentsPage.vue') }
     ],
   },
 
