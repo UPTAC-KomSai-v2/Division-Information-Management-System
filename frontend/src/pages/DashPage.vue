@@ -1,8 +1,10 @@
 <template>
-  <q-page class="q-pa-md">
-    <h3 class="q-px-xl text-primary text-weight-bold" style="font-family: Arial, Helvetica, sans-serif;">Welcome to DIMS!</h3>
-    <h6 class="q-px-xl text-black" style="font-family: Arial, Helvetica, sans-serif;">The Division Information Management System</h6>
-    <div class="q-mx-xl q-my-md" style="border: 1px solid var(--q-primary);">
+  <div class="q-px-xl q-mx-md q-py-lg">
+    <div class="q-mb-lg">
+      <div class="text-h4 text-weight-bold text-primary">Welcome to DIMS</div>
+      <div class="text-subtitle1 text-grey-8">Division Information Management System</div>
+    </div>
+    <div style="border: 1px solid var(--q-primary);">
       <!-- Search Input -->
       <q-input v-model="search" outlined class="full-width" placeholder="Search documents, people, tickets..." debounce="300" clearable >
         <template #prepend>
@@ -13,7 +15,7 @@
 
       </div>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script setup>

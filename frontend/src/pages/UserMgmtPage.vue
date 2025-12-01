@@ -2,7 +2,9 @@
   <div class="q-px-xl q-mx-md q-py-lg">
     <div class="q-mb-lg">
       <div class="text-h4 text-weight-bold text-primary">Division Directory</div>
-      <div class="text-subtitle1 text-grey-8"> A quick-access directory listing all division staff and contact details</div>
+      <div class="text-subtitle1 text-grey-8">
+        Manage employee access, update roles, and view current status of all division staff members.
+      </div>
     </div>
 
     <q-card class="no-shadow" style="border: 1px solid var(--q-primary);">
@@ -20,6 +22,15 @@
               <q-icon name="search" />
             </template>
           </q-input>
+          
+          <q-btn
+            color= primary
+            icon="add"
+            label="Add User"
+            class="q-ml-md"
+            unelevated
+            no-caps
+          />
         </template>
 
         <template v-slot:body-cell-name="props">
@@ -51,7 +62,8 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn flat round color=primary icon="message" size="sm" class="q-mr-sm" />
+            <q-btn flat round color="grey-7" icon="edit" size="sm" class="q-mr-sm" />
+            <q-btn flat round color="red-10" icon="delete" size="sm" />
           </q-td>
         </template>
 

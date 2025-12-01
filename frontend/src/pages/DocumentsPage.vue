@@ -1,93 +1,118 @@
 <template>
-  <q-page class="q-pa-md">
-    <h3 class="q-px-xl text-primary text-weight-bold" style="font-family: Arial, Helvetica, sans-serif;">Document Repository</h3>
-    <h6 class="q-px-xl text-black" style="font-family: Arial, Helvetica, sans-serif;">Manage your records and search for other documents</h6>
-    <div class="q-mx-xl q-my-md">
-      <!-- Search Input -->
-      <q-input v-model="search" outlined class="full-width" placeholder="Search publications, awards, memos..." debounce="300" clearable >
-        <template #prepend>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-
-      <!-- Tabs -->
-      <q-tabs v-model="activeTab" dense class="q-mt-md text-primary" align="left" narrow-indicator>
-        <q-tab name="all" label="All" />
-        <q-tab name="Publications" label="Publications" />
-        <q-tab name="Memos" label="Memos" />
-        <q-tab name="Awards" label="Awards" />
-        <q-tab name="Miscellaneous" label="Miscellaneous" />
-      </q-tabs>
-
-      <!-- Results -->
-      <div class="q-mt-md">
-
-        <!-- No results found -->
-        <div v-if="filteredResults.length === 0" class="text-grey text-center q-pa-md">
-          No results found.
-        </div>
-
-        <!-- Result Cards -->
-        <q-card v-for="item in filteredResults" :key="item.id" class="q-mb-sm result-card cursor-pointer" @click="goTo(item)" >
-          <q-card-section>
-            <div class="text-h6">{{ item.name }}</div>
-            <div class="text-caption text-grey">{{ item.type }}</div>
-          </q-card-section>
-        </q-card>
-
-      </div>
+  <div class="q-px-xl q-mx-md q-py-lg">
+    <div class="q-mb-lg">
+      <div class="text-h4 text-weight-bold text-primary">Document Repository</div>
+      <div class="text-subtitle1 text-grey-8"> A centralized storage hub for securely organizing, and accessing all institutional documents.</div>
     </div>
-  </q-page>
+
+    <q-card class="no-shadow" style="border: 1px solid var(--q-primary);">
+      <q-table
+        title="Documents"
+        :rows="rows"
+        :columns="columns"
+        row-key="id"
+        :filter="filter"
+        flat
+      >
+        <template v-slot:top-right>
+          <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </template>
+
+        <template v-slot:body-cell-name="props">
+          <q-td :props="props">
+            <div class="row items-center no-wrap">
+              <div class="text-weight-bold">{{ props.row.name }}</div>
+              <div class="text-caption text-grey">{{ props.row.email }}</div>
+            </div>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-access="props">
+          <q-td :props="props">
+            <q-chip
+              dense
+              :color="getAccessColor(props.row.access).bg"
+              :text-color="getAccessColor(props.row.access).text"
+              class="text-weight-bold q-px-sm"
+            >
+              {{ props.row.access }}
+            </q-chip>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props">
+            <q-btn flat round color=primary icon="open_in_new" size="sm" class="q-mr-sm" />
+          </q-td>
+        </template>
+
+      </q-table>
+    </q-card>
+  </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 
-const search = ref('')
-const activeTab = ref('all')
-const router = useRouter()
+const filter = ref('')
 
-// Example mock data to demonstrate behavior
-const results = ref([
-  { id: 1, name: 'Memo: Budget 2025', type: 'Memos', route: '/memos/1' },
-  { id: 2, name: 'John Santos', type: 'Publications', route: '/pubs/2' },
-  { id: 3, name: 'Best Award', type: 'Awards', route: '/awards/112' },
-  { id: 4, name: 'Faculty Meeting', type: 'Miscellaneous', route: '/misc/4' }
-])
+// 1. Define Table Columns
+const columns = [
+  { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: true },
+  { name: 'type', align: 'left', label: 'Type', field: 'type', sortable: true },
+  { name: 'access', align: 'left', label: 'Access Status', field: 'access', sortable: true },
+  { name: 'actions', align: 'right', label: 'Actions', field: 'actions' }
+]
 
-// Filtering based on search term + active tab
-const filteredResults = computed(() => {
-  return results.value.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(search.value.toLowerCase())
+// 2. Define Dummy Data
+const rows = [
+  {
+    id: 1,
+    name: 'John Doe',
+    type: 'Publication',
+    access: 'Restricted'
+  },
+  {
+    id: 2,
+    name: 'Sarah Smith',
+    type: 'Memos',
+    access: 'Public'
+  },
+  {
+    id: 3,
+    name: 'Michael Brown',
+    type: 'Memos',
+    access: 'Public'
+  },
+  {
+    id: 4,
+    name: 'Emily White',
+    type: 'Awards',
+    access: 'Restricted'
+  },
+  {
+    id: 5,
+    name: 'David Lee',
+    type: 'Publication',
+    access: 'Permitted'
+  }
+]
 
-    if (!matchesSearch) return false
-
-    if (activeTab.value === 'all') return true
-    return item.type === activeTab.value
-  })
-})
-
-// Debounce search
-let timer = null
-watch(search, val => {
-  clearTimeout(timer)
-  timer = setTimeout(() => console.log('Searching:', val), 300)
-})
-
-function goTo(item) {
-  router.push(item.route)
+// 3. Helper for Access Colors
+const getAccessColor = (access) => {
+  switch (access) {
+    case 'Public':
+      return { bg: 'green-2', text: 'green-9' }
+    case 'Permitted':
+      return { bg: 'blue-2', text: 'blue-9' }
+    case 'Restricted':
+      return { bg: 'red-2', text: 'red-9' }
+    default:
+      return { bg: 'grey-2', text: 'black' }
+  }
 }
 </script>
-
-<style scoped>
-.result-card {
-  border: 1px solid #ddd;
-  transition: 0.2s;
-}
-
-.result-card:hover {
-  border-color: var(--q-primary);
-  transform: scale(1.01);
-}
-</style>
