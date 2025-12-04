@@ -8,6 +8,7 @@
             <p class="text-primary text-center text-weight-bold text-h4">DIMS</p>
             <p class="text-center text-subtitle1">Division Information Management System</p>
             <p class="text-center text-weight-light text-subtitle2">University of the Philippines Tacloban College</p>
+            <p class="text-center text-weight-light text-subtitle2">Please contact System Administrator at example@email.com</p>
             <q-btn class="full-width" color="secondary" label="Confirm" @click="$router.push('/login')"/>
           </div>
         </div>

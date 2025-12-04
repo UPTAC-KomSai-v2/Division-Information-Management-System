@@ -7,7 +7,24 @@
         <div class="text-subtitle1 text-grey-8"> A dedicated support hub where users can submit tickets, track requests, and receive assistance</div>
       </div>
       <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
-        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;"> New Ticket</q-btn>
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="newTicket = true"> New Ticket</q-btn>
+         <q-dialog v-model="newTicket">
+          <q-card style="min-width: 400px; max-width: 600px;">
+            <q-card-section>
+              <div class="text-h6">Create New Ticket</div>
+            </q-card-section>
+
+            <q-card-section>
+              <q-input v-model="tktTitle" label="Title" outlined class="full-width" />
+              <q-input v-model="tktDesc" label="Description" outlined type="textarea" class="full-width q-mt-md" />
+            </q-card-section>
+
+            <q-card-actions align="right">
+              <q-btn flat label="Cancel" color="primary" v-close-popup />
+              <q-btn flat label="Submit" color="primary" @click="submitTicket" />
+            </q-card-actions>
+          </q-card>
+         </q-dialog>
       </div>
     </div>
 
@@ -75,6 +92,9 @@
 <script>
 import { ref, computed, watch} from 'vue'
 const search = ref('')
+const tktTitle = ref('')
+const tktDesc = ref('')
+const newTicket = ref(false)
 
 let timer = null
 watch(search, val => {
@@ -131,7 +151,10 @@ export default {
       selectedDate,
       selectedEvent,
       events,
-      filteredEvents
+      filteredEvents,
+      newTicket,
+      tktTitle,
+      tktDesc,
     }
   }
 }
