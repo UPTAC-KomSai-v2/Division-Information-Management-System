@@ -18,9 +18,9 @@
               <img src="~assets/dims_mini.png">
             </q-avatar>
 
-            <div class="text-subtitle1 q-my-sm">John Doe</div>
+            <div class="text-subtitle1 q-my-sm"> {{ currentUserName }}</div>
             <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/login')"/>
-            <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="$router.push('/login')"/>
+            <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="logout" />
           </div>
         </q-btn-dropdown>
 
@@ -61,8 +61,11 @@
 
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
+
+const router = useRouter()
 
 const linksList = [
    {
@@ -88,8 +91,26 @@ const linksList = [
 ]
 
 const leftDrawerOpen = ref(false)
+const currentUserName = ref('User') // default fallback
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+// read username from localStorage when layout loads
+onMounted(() => {
+  const storedName = localStorage.getItem('username')
+  if (storedName) {
+    currentUserName.value = storedName
+  }
+})
+
+function logout () {
+  // clear client auth data
+  localStorage.removeItem('access')
+  localStorage.removeItem('refresh')
+  localStorage.removeItem('username')
+
+  router.push('/login')
 }
 </script>
