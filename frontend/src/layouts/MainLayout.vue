@@ -62,31 +62,31 @@
 
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 
-const linksList = [
-   {
-    title: 'Calendar',
-    icon: 'calendar_today',
-    to: '/app/calendar',
-  },
-  {
-    title: 'Directory',
-    icon: 'contacts',
-    to: '/app/directory',
-  },
-  {
-    title: 'Documents Repository',
-    icon: 'library_books',
-    to: '/app/documents',
-  },
-  {
-    title: 'Services Center',
-    icon: 'build',
-    to: '/app/services',
-  },
+const userRole = ref('admin') // replace with auth logic
+
+const baseLinks = [
+  {title: 'Calendar', icon: 'calendar_today', to: '/app/calendar'},
+  {title: 'Directory', icon: 'contacts', to: '/app/directory'},
+  {title: 'Documents Repository', icon: 'library_books', to: '/app/documents'},
+  {title: 'Services Center', icon: 'build', to: '/app/services',},
 ]
+
+const linksList = computed(() => {
+  const links = [...baseLinks]
+
+  if (userRole.value === 'admin') {
+    links.push({
+      title: 'Admin Panel',
+      icon: 'admin_panel_settings',
+      to: '/app/admin'
+    })
+  }
+
+  return links
+})
 
 const leftDrawerOpen = ref(false)
 const activeStatus = ref(false)

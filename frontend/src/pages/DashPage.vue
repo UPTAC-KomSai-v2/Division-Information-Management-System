@@ -1,5 +1,5 @@
 <template>
-  <div class="q-px-xl q-mx-md q-py-lg">
+  <div class="q-pa-lg q-ml-md">
 
     <!-- Page Header -->
     <div class="q-mb-lg">
@@ -8,11 +8,11 @@
     </div>
 
     <!-- Main Container -->
-    <div class="row q-col-gutter-md wrap" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+    <div class="row q-col-gutter-md wrap q-pr-md q-pb-md" style="border: 1px solid var(--q-primary); border-radius: 8px;">
 
       <!-- CARD 1 - Support Center -->
       <div class="col-12 col-sm-6">
-        <div class="q-ma-sm" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+        <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
 
           <!-- HEADER BAR -->
           <div
@@ -43,7 +43,7 @@
 
       <!-- CARD 2 - File Repository -->
       <div class="col-12 col-sm-6">
-        <div class="q-ma-sm" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+        <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
 
           <div
             class="row items-center justify-between q-pa-sm"
@@ -57,7 +57,7 @@
             />
           </div>
 
-          <div class="q-pa-md">
+          <div class="q-pa-sm">
             <q-list dense>
               <q-item v-for="d in documents.slice(0,3)" :key="d.id">
                 <q-item-section>
@@ -72,7 +72,7 @@
 
       <!-- CARD 3 - Calendar -->
       <div class="col-12 col-sm-6">
-        <div class="q-ma-sm" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+        <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
 
           <div
             class="row items-center justify-between q-pa-sm"
@@ -90,8 +90,8 @@
             <q-date
               v-model="selectedDate"
               :events="events.map(e => e.date)"
-              event-color="orange"
-              today-btn
+              event-color= "var(--q-accent)"
+              minimal
               navigation-view="calendar"
               class="full-width"
             />
@@ -102,7 +102,7 @@
 
       <!-- CARD 4 - Directory -->
       <div class="col-12 col-sm-6">
-        <div class="q-ma-sm" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+        <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
 
           <div
             class="row items-center justify-between q-pa-sm"
