@@ -20,7 +20,7 @@
 
             <div class="text-subtitle1 q-my-sm">John Doe</div>
             <q-toggle v-model="activeStatus" label="Active Status" />
-            <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/login')"/>
+            <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/app/Profile')"/>
             <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="$router.push('/login')"/>
           </div>
         </q-btn-dropdown>
