@@ -1,11 +1,17 @@
 <template>
   <div class="q-px-xl q-mx-md q-py-lg">
-    <div class="q-mb-lg">
-      <div class="text-h4 text-weight-bold text-primary">Document Repository</div>
-      <div class="text-subtitle1 text-grey-8"> A centralized storage hub for securely organizing, and accessing all institutional documents.</div>
+    <!-- Header -->
+    <div class="full-width row wrap items-center">
+      <div class="q-mb-lg col-grow">
+        <div class="text-h4 text-weight-bold text-primary">Document Repository</div>
+        <div class="text-subtitle1 text-grey-8">A centralized storage hub for securely organizing, and accessing all institutional documents.</div>
+      </div>
+      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')"> Upload File</q-btn>
+      </div>
     </div>
 
-    <q-card class="no-shadow" style="border: 1px solid var(--q-primary);">
+    <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
       <q-table
         title="Documents"
         :rows="rows"

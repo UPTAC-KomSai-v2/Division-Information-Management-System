@@ -5,7 +5,7 @@
       <div class="text-subtitle1 text-grey-8"> A quick-access directory listing all division staff and contact details</div>
     </div>
 
-    <q-card class="no-shadow" style="border: 1px solid var(--q-primary);">
+    <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
       <q-table
         title="Staff Members"
         :rows="rows"

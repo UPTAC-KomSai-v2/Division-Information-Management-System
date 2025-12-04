@@ -18,7 +18,12 @@
               <img src="~assets/dims_mini.png">
             </q-avatar>
 
+<<<<<<< HEAD
             <div class="text-subtitle1 q-my-sm"> {{ currentUserName }}</div>
+=======
+            <div class="text-subtitle1 q-my-sm">John Doe</div>
+            <q-toggle v-model="activeStatus" label="Active Status" />
+>>>>>>> main
             <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/login')"/>
             <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="logout" />
           </div>
@@ -61,6 +66,7 @@
 
 
 <script setup>
+<<<<<<< HEAD
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
@@ -88,10 +94,40 @@ const linksList = [
     icon: 'build',
     to: '/app/services',
   },
+=======
+import { ref, computed } from 'vue'
+import EssentialLink from 'components/EssentialLink.vue'
+
+const userRole = ref('admin') // replace with auth logic
+
+const baseLinks = [
+  {title: 'Calendar', icon: 'calendar_today', to: '/app/calendar'},
+  {title: 'Directory', icon: 'contacts', to: '/app/directory'},
+  {title: 'Documents Repository', icon: 'library_books', to: '/app/documents'},
+  {title: 'Services Center', icon: 'build', to: '/app/services',},
+>>>>>>> main
 ]
 
+const linksList = computed(() => {
+  const links = [...baseLinks]
+
+  if (userRole.value === 'admin') {
+    links.push({
+      title: 'Admin Panel',
+      icon: 'admin_panel_settings',
+      to: '/app/admin'
+    })
+  }
+
+  return links
+})
+
 const leftDrawerOpen = ref(false)
+<<<<<<< HEAD
 const currentUserName = ref('User') // default fallback
+=======
+const activeStatus = ref(false)
+>>>>>>> main
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
