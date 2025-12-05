@@ -196,7 +196,7 @@
             <!-- CHAT VIEW -->
             <template v-else>
               <div class="conversation-body">
-                <!-- ⭐ SCROLL AREA FIXED HERE ⭐ -->
+                <!--  SCROLL AREA FIXED HERE  -->
                 <q-scroll-area ref="scrollArea" class="message-scroll fit">
                   <div class="q-pa-sm column message-list">
                     <template v-if="visibleMessages.length">
@@ -514,7 +514,7 @@ const visibleMessages = computed(() =>
   ),
 )
 
-// ⭐ Scroll function
+// Scroll function
 async function scrollToBottom() {
   await nextTick()
   if (scrollArea.value) {
