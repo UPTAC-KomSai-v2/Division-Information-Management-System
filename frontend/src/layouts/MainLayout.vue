@@ -7,8 +7,7 @@
 
         <q-toolbar-title class="row items-center">
           <q-btn flat no-caps dense class="row items-center" @click="$router.push('/app/dashboard')">
-            <img class="q-mr-sm" alt="DIMS logo" src="~assets/dims.png" style="width: 40px; height: 40px" />
-            Division Information <br/> Management System
+            <img alt="DIMS logo" src="~assets/dims.png" style="width: 40px; height: 40px" />
           </q-btn>
         </q-toolbar-title>
 
