@@ -138,11 +138,11 @@
           <div class="row items-center justify-between q-pa-sm" style="background: var(--q-primary); border-radius: 8px;">
             <div class="text-white text-h6 q-mx-sm">Generate Report</div>
           </div>
-          <div class="row wrap">
+          <div class="row wrap q-pa-md">
             <div class="col-12 col-md-6 q-pa-md">
-              <div class="row q-col-gutter-md q-mb-md">
+              <div class="row q-py-md">
                 <!-- DATE FROM -->
-                <div class="col-12 col-sm-6">
+                <div class="col-12 col-sm-6 q-pr-sm">
                   <q-input dense outlined v-model="dateFrom" label="Date From" readonly>
                     <template #append>
                       <q-icon name="event" class="cursor-pointer" @click="showFromPicker = true" />
@@ -155,7 +155,7 @@
                 </div>
 
                 <!-- DATE TO -->
-                <div class="col-12 col-sm-6">
+                <div class="col-12 col-sm-6 q-pl-sm">
                   <q-input dense outlined v-model="dateTo" label="Date To" readonly>
                     <template #append>
                       <q-icon name="event" class="cursor-pointer" @click="showToPicker = true" />
@@ -171,7 +171,7 @@
               <q-btn class="bg-primary text-white" icon="text_snippet" @click="$router.push('/app/admin')">Generate Report</q-btn>            
             </div>
             <div class="col-12 col-md-6 q-pa-md">
-              <q-card class="no-shadow q-mx-xs q-mt-md q-mb-sm" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+              <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
                 <q-table
                   title="Report Preview"
                   :rows="rows"
