@@ -6,7 +6,7 @@
     </div>
 
     <!-- Main Container -->
-    <div class="row wrap q-my-md" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+    <div class="row wrap q-my-md">
 
       <!-- CARD 1 - Support Center -->
       <div class="col-12 col-sm-6 q-pa-sm">
@@ -132,17 +132,17 @@
       </div>
     </div>
 
-    <div class="q-pa-xs" style="border: 1px solid var(--q-primary); border-radius: 8px;">
-      <div class="col-12 col-sm-6 q-pa-sm">
+    <div class="q-pa-xs">
+      <div class="col-12 col-sm-6 q-pa-xs">
         <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
-          <div class="row items-center justify-between q-pa-sm" style="background: var(--q-primary); border-radius: 8px;">
+          <div class="row items-center justify-between q-pa-sm" style="background: var(--q-primary); border-top-left-radius: 8px; border-top-right-radius: 8px;">
             <div class="text-white text-h6 q-mx-sm">Generate Report</div>
           </div>
           <div class="row wrap q-pa-md">
             <div class="col-12 col-md-6 q-pa-md">
               <div class="row q-py-md">
                 <!-- DATE FROM -->
-                <div class="col-12 col-sm-6 q-pr-sm">
+                <div class="col-12 col-sm-6 q-pa-sm">
                   <q-input dense outlined v-model="dateFrom" label="Date From" readonly>
                     <template #append>
                       <q-icon name="event" class="cursor-pointer" @click="showFromPicker = true" />
@@ -155,7 +155,7 @@
                 </div>
 
                 <!-- DATE TO -->
-                <div class="col-12 col-sm-6 q-pl-sm">
+                <div class="col-12 col-sm-6 q-pa-sm">
                   <q-input dense outlined v-model="dateTo" label="Date To" readonly>
                     <template #append>
                       <q-icon name="event" class="cursor-pointer" @click="showToPicker = true" />
