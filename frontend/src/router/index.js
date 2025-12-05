@@ -7,6 +7,7 @@ import {
 } from 'vue-router'
 import routes from './routes.js'
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 /*
  * If not building with SSR mode, you can
@@ -16,6 +17,8 @@ import routes from './routes.js'
  * async/await or return a Promise which resolves
  * with the Router instance.
  */
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 
