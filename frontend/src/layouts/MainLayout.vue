@@ -7,8 +7,7 @@
 
         <q-toolbar-title class="row items-center">
           <q-btn flat no-caps dense class="row items-center" @click="$router.push('/app/dashboard')">
-            <img class="q-mr-sm" alt="DIMS logo" src="~assets/dims.png" style="width: 40px; height: 40px" />
-            Division Information <br/> Management System
+            <img alt="DIMS logo" src="~assets/dims.png" style="width: 40px; height: 40px" />
           </q-btn>
         </q-toolbar-title>
 
@@ -56,10 +55,9 @@
               <img src="~assets/dims_mini.png">
             </q-avatar>
 
-            <div class="text-subtitle1 q-my-sm">John Doe</div>
-            <q-toggle v-model="activeStatus" label="Active Status" />
-            <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/login')"/>
-            <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="$router.push('/login')"/>
+            <div class="text-subtitle1 q-my-sm"> {{ currentUserName }}</div>
+            <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/app/Profile')"/>
+            <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="logout"/>
           </div>
         </q-btn-dropdown>
 
@@ -89,20 +87,22 @@
 /* text + icon color when active */
 .q-drawer .q-router-link--active .q-item__label,
 .q-drawer .q-router-link--active .q-icon {
-  color: var(--q-accent) !important; 
+  color: var(--q-accent) !important; /* your secondary color */
 }
 
+/* optional hover for non-active items */
 .q-drawer .q-item:hover:not(.q-router-link--active) {
-  background: var(--q-primary-lighten2) !important;
+  color: var(--q-accent) !important; 
 }
 </style>
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
 
-const userRole = ref('admin') // replace with auth logic
+//const userRole = ref('admin') // replace with auth logic
 
 const messages = ref([
   {
@@ -134,33 +134,38 @@ const messages = ref([
   }
 ])
 
+const router = useRouter()
+
 const unreadCount = computed(() => messages.value.filter(m => m.unread).length)
 
-const baseLinks = [
+const linksList = [
   {title: 'Calendar', icon: 'calendar_today', to: '/app/calendar'},
   {title: 'Directory', icon: 'contacts', to: '/app/directory'},
   {title: 'Documents Repository', icon: 'library_books', to: '/app/documents'},
   {title: 'Services Center', icon: 'build', to: '/app/services',},
 ]
 
-const linksList = computed(() => {
-  const links = [...baseLinks]
-
-  if (userRole.value === 'admin') {
-    links.push({
-      title: 'Admin Panel',
-      icon: 'admin_panel_settings',
-      to: '/app/admin'
-    })
-  }
-
-  return links
-})
-
 const leftDrawerOpen = ref(false)
-const activeStatus = ref(false)
+const currentUserName = ref('User')
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+// read username from localStorage when layout loads
+onMounted(() => {
+  const storedName = localStorage.getItem('username')
+  if (storedName) {
+    currentUserName.value = storedName
+  }
+})
+
+function logout () {
+  // clear client auth data
+  localStorage.removeItem('access')
+  localStorage.removeItem('refresh')
+  localStorage.removeItem('username')
+
+  router.push('/login')
 }
 </script>

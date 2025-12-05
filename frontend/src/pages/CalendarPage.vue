@@ -1,17 +1,21 @@
 <template>
   <div class="q-px-xl q-mx-md q-py-lg">
-
     <!-- Header -->
-    <div class="q-mb-lg">
-      <div class="text-h4 text-weight-bold text-primary">Calendar</div>
-      <div class="text-subtitle1 text-grey-8">A Quick Glance at Upcoming Events</div>
+    <div class="full-width row wrap items-center">
+      <div class="q-mb-lg col-grow">
+        <div class="text-h4 text-weight-bold text-primary">Calendar</div>
+        <div class="text-subtitle1 text-grey-8">A Quick Glance at Upcoming Events</div>
+      </div>
+      <div class="q-ma-xs flex flex-center justify-center items-center"> 
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')"> Add Event</q-btn>
+      </div>
     </div>
 
     <!-- Main Responsive Container -->
     <div class="row q-col-gutter-md wrap" style="min-height: 70vh;" >
       <!-- LEFT COLUMN -->
       <div class="col-12 col-sm-6 col-md-4" >
-        <div class="q-pa-md full-height">
+        <div class="full-height" style="border: 1px solid var(--q-primary); border-radius: 8px;">
           <q-date
             v-model="selectedDate"
             :events="events.map(e => e.date)"

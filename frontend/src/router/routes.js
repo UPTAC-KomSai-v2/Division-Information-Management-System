@@ -15,8 +15,8 @@ const routes = [
       { path: 'services', component: () => import('src/pages/TicketsPage.vue') },
       { path: 'documents', component: () => import('src/pages/DocumentsPage.vue') },
       { path: 'upload', component: () => import('src/pages/DocUploadPage.vue') },
+      { path: 'profile', component: () => import('pages/UserProfilePage.vue') },
       { path: 'messages', component: () => import('src/pages/MessagesPage.vue') },
-      { path: 'admin', component: () => import('src/pages/AdminPage.vue') },
     ],
   },
 
@@ -34,6 +34,13 @@ const routes = [
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
+  },
+
+
+  {
+    path: '/app/admin',
+    component: () => import('pages/AdminDashboard.vue'),
+    meta: { requiresAdmin: true }
   },
 ]
 

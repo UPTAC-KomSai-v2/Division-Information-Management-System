@@ -1,8 +1,13 @@
 <template>
   <div class="q-px-xl q-mx-md q-py-lg">
-    <div class="q-mb-lg">
-      <div class="text-h4 text-weight-bold text-primary">Division Directory</div>
-      <div class="text-subtitle1 text-grey-8"> A quick-access directory listing all division staff and contact details</div>
+    <div class="full-width row wrap items-center">
+      <div class="q-mb-lg col-grow">
+        <div class="text-h4 text-weight-bold text-primary">Division Directory</div>
+        <div class="text-subtitle1 text-grey-8">A quick-access directory listing all division staff and contact details</div>
+      </div>
+      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')">Add User</q-btn>
+      </div>
     </div>
 
     <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
@@ -52,6 +57,8 @@
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn flat round color=primary icon="message" size="sm" class="q-mr-sm" />
+            <q-btn flat round color=primary icon="edit_square" size="sm" class="q-mr-sm" />
+            <q-btn flat round color=primary icon="delete" size="sm" class="q-mr-sm" />
           </q-td>
         </template>
 
