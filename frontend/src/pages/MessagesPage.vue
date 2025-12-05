@@ -1,347 +1,566 @@
 <template>
-  <q-page class="column fit">
-    <div class="messages-page column fit">
-      <div class="messages-row row no-wrap fit">
-        <!-- Left column -->
-        <div class="col-4 col-md-3 bg-grey-2 column left-pane">
-          <div class="q-pa-sm pane-controls">
-            <div class="row items-center q-gutter-sm no-wrap">
-              <q-input
-                v-model="search"
-                dense
-                filled
-                placeholder="Search"
-                class="col"
-                clearable
-                hide-bottom-space
-              >
-                <template #prepend>
-                  <q-icon name="search" />
-                </template>
-              </q-input>
-              <q-btn flat round dense icon="settings" color="grey-8" @click="toggleSettings" />
-            </div>
-          </div>
+  <q-layout view="lHh Lpr lFf">
+    <q-page-container class="fit">
+      <q-page class="column fit messages-root">
+        <div class="messages-row row no-wrap fit">
+          <!-- LEFT SIDEBAR -->
+          <div class="col-4 col-md-3 bg-grey-2 column left-pane">
+            <div class="q-pa-sm pane-controls">
+              <div class="row items-center q-gutter-sm no-wrap">
+                <q-input
+                  ref="searchInput"
+                  v-model="search"
+                  dense
+                  filled
+                  placeholder="Search"
+                  class="col"
+                  clearable
+                >
+                  <template #prepend>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
 
-          <div class="column contacts-list">
-            <q-expansion-item
-              dense
-              expand-separator
-              switch-toggle-side
-              expand-icon="keyboard_arrow_right"
-              expanded-icon="keyboard_arrow_down"
-              :caption="`(${filteredStarred.length})`"
-              label="Starred"
-              default-opened
-            >
-              <q-item
-                v-for="item in filteredStarred"
-                :key="item.id"
-                clickable
-                @click="selectStarredContact(item)"
-                :class="{ 'bg-grey-3': selectedContact && selectedContact.id === item.id }"
-              >
-                <q-item-section avatar>
-                  <q-avatar color="warning" text-color="white">
-                    <q-icon name="star" />
-                  </q-avatar>
-                </q-item-section>
-                <q-item-section>
-                  <div class="text-body2 text-weight-bold">{{ item.name }}</div>
-                  <div class="text-caption text-grey-7 ellipsis">{{ item.status || '' }}</div>
-                </q-item-section>
-                <q-item-section side>
-                  <q-icon name="chevron_right" />
-                </q-item-section>
-              </q-item>
-            </q-expansion-item>
-
-            <q-expansion-item
-              dense
-              expand-separator
-              switch-toggle-side
-              expand-icon="keyboard_arrow_right"
-              expanded-icon="keyboard_arrow_down"
-              :caption="`(${filteredPrivate.length})`"
-              label="Private"
-            >
-              <q-item
-                v-for="item in filteredPrivate"
-                :key="item.id"
-                clickable
-                @click="selectContact(item)"
-              >
-                <q-item-section avatar>
-                  <q-avatar color="grey-4" text-color="grey-9">
-                    <q-icon name="person" />
-                  </q-avatar>
-                </q-item-section>
-                <q-item-section>
-                  <div class="text-body1 text-weight-bold">{{ item.name }}</div>
-                </q-item-section>
-                <q-item-section side>
-                  <q-icon name="chevron_right" />
-                </q-item-section>
-              </q-item>
-            </q-expansion-item>
-          </div>
-        </div>
-
-        <!-- Right column -->
-        <div class="col-8 col-md-9 conversation-panel">
-          <div class="row items-center q-pa-md q-gutter-md" style="flex-shrink: 0">
-            <q-avatar size="56px">
-              <q-icon name="person" size="40px" />
-            </q-avatar>
-            <div class="column">
-              <div class="row items-center q-gutter-xs">
-                <div class="text-h6 text-weight-bold">{{ selectedContact?.name }}</div>
-                <q-icon v-if="isStarredContact" name="star" color="primary" size="16px" />
+                <q-btn flat round dense icon="settings" color="grey-8" @click="toggleSettings" />
               </div>
-              <div class="text-caption text-grey-7">{{ selectedContact?.status || 'Online' }}</div>
+
             </div>
-            <q-space />
-            <q-btn flat round dense icon="more_vert">
-              <q-menu auto-close>
-                <q-list separator>
-                  <q-item clickable :disable="!selectedContact" @click="toggleStarContact">
-                    <q-item-section>{{
-                      isStarredContact ? 'Unstar contact' : 'Star contact'
-                    }}</q-item-section>
-                    <q-item-section side>
-                      <q-icon :name="isStarredContact ? 'star' : 'star_border'" />
-                    </q-item-section>
-                  </q-item>
+
+            <q-scroll-area class="contacts-list">
+              <div class="column">
+                <div class="q-pa-sm">
+                  <q-btn
+                    color="primary"
+                    outline
+                    icon="add"
+                    label="Create New Chat"
+                    unelevated
+                    class="full-width"
+                    @click="startNewChat"
+                  />
+                </div>
+
+                <div v-for="item in filteredPrivate" :key="item.id">
                   <q-item
                     clickable
-                    :disable="!selectedContact || selectedContact.id === 'self'"
-                    @click="deleteContact"
+                    @click="selectContact(item)"
+                    :class="['contact-item', { 'bg-grey-3': selectedContact && selectedContact.id === item.id }]"
                   >
-                    <q-item-section>Delete contact</q-item-section>
+                    <q-item-section avatar>
+                      <q-avatar color="grey-4" text-color="grey-9">
+                        <q-icon name="person" />
+                      </q-avatar>
+                    </q-item-section>
+
+                    <q-item-section>
+                      <div class="text-body1 text-weight-bold">{{ item.name }}</div>
+                    </q-item-section>
+
                     <q-item-section side>
-                      <q-icon name="delete" />
+                      <q-icon name="chevron_right" />
                     </q-item-section>
                   </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
-          </div>
-
-          <div
-            v-if="showSettings"
-            class="conversation-body column q-pa-lg"
-            style="background: #f7f9fb"
-          >
-            <div class="text-h6 text-weight-bold q-mb-lg">Settings</div>
-
-            <div class="q-mb-xl">
-              <div class="text-subtitle1 text-weight-bold q-mb-sm">Privacy</div>
-              <div class="text-body2 text-grey-8 q-mb-sm">You can restrict who can message you</div>
-              <q-option-group
-                v-model="privacyOption"
-                type="radio"
-                :options="[
-                  { label: 'My contacts only', value: 'contacts_only' },
-                  { label: 'My contacts and anyone in the app', value: 'contacts_courses' },
-                ]"
-              />
-            </div>
-
-            <div>
-              <div class="text-subtitle1 text-weight-bold q-mb-sm">General</div>
-              <div class="row items-center q-gutter-xs">
-                <q-toggle v-model="useEnterToSend" color="primary" />
-                <span class="text-body2">Use enter to send</span>
+                </div>
               </div>
-            </div>
+            </q-scroll-area>
           </div>
 
-          <template v-else>
-            <div class="conversation-body column q-pa-lg" style="background: #f7f9fb">
-              <div v-if="visibleMessages.length" class="column message-list">
-                <div
-                  v-for="msg in visibleMessages"
-                  :key="msg.id"
-                  class="message-item q-pa-md q-mb-md bg-white"
-                >
-                  <div class="row items-start no-wrap">
-                    <div class="col">
-                      <div class="text-subtitle2 text-weight-bold">
-                        {{ msg.senderName }}
-                      </div>
-                      <div class="q-mt-sm text-body1">
-                        {{ msg.text }}
-                      </div>
-                    </div>
+          <!-- RIGHT PANEL -->
+          <div class="col-8 col-md-9 conversation-panel">
+            <!-- HEADER -->
+            <div class="row items-center q-pa-md q-gutter-md header-bar">
+              <q-avatar size="56px">
+                <q-icon name="person" size="40px" />
+              </q-avatar>
+
+              <div class="column contact-header">
+                <div class="row items-center q-gutter-xs">
+                  <div class="text-h6 text-weight-bold contact-name">
+                    {{ selectedContact?.name || 'Select a chat' }}
                   </div>
                 </div>
-              </div>
-
-              <div v-else class="column flex-center text-center text-grey-8 q-mt-xl">
-                <div class="text-body1 text-weight-bold">{{ emptyState.title }}</div>
-                <div class="text-body2 text-grey-7 q-mt-xs">
-                  {{ emptyState.subtitle }}
+                <div v-if="selectedContact" class="text-caption text-grey-7">
+                  {{ selectedContact?.status || 'Offline' }}
                 </div>
               </div>
+
+              <q-space />
+
+              <q-btn v-if="selectedContact" flat round dense icon="more_vert">
+                <q-menu auto-close>
+                  <q-list separator>
+                    <q-item clickable @click="changeNickname">
+                      <q-item-section>Change nickname</q-item-section>
+                    </q-item>
+                    <q-item clickable @click="removeNickname">
+                      <q-item-section>Remove nickname</q-item-section>
+                    </q-item>
+                    <q-item clickable @click="deleteContact">
+                      <q-item-section>Delete chat</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </q-btn>
             </div>
 
+            <!-- SETTINGS MODE -->
             <div
-              class="row items-center q-pa-md q-gutter-sm"
-              style="border-top: 1px solid #e0e3e7; background: #f5f5f5; flex-shrink: 0"
+              v-if="showSettings"
+              class="conversation-body column q-pa-lg"
+              style="background: #f7f9fb"
             >
-              <q-input v-model="draftMessage" filled class="col" placeholder="Write a message..." />
-              <q-btn flat round dense icon="mood" />
-              <q-btn flat round dense icon="send" color="primary" />
+              <div class="text-h6 text-weight-bold">Settings</div>
+              <div class="text-body2 text-grey-7 q-mt-xs">No settings implemented</div>
             </div>
-          </template>
+
+            <!-- CHAT VIEW -->
+            <template v-else>
+              <div class="conversation-body">
+                <!-- ⭐ SCROLL AREA FIXED HERE ⭐ -->
+                <q-scroll-area ref="scrollArea" class="message-scroll fit">
+                  <div class="q-pa-sm column message-list">
+                    <template v-if="visibleMessages.length">
+                      <div
+                        v-for="msg in visibleMessages"
+                        :key="msg.id"
+                        class="message-item q-pa-md q-mb-md"
+                        :class="msg.senderId === currentUserId ? 'msg-self' : 'msg-other'"
+                      >
+                        <div class="text-subtitle2 text-weight-bold">
+                          {{ msg.senderId === currentUserId ? 'You' : msg.senderName }}
+                        </div>
+
+                        <div class="q-mt-sm text-body1">{{ msg.text }}</div>
+                      </div>
+                    </template>
+
+                    <template v-else>
+                      <div class="column flex-center text-center text-grey-8 empty-state">
+                        <div class="text-body1 text-weight-bold">
+                          {{ selectedContact ? emptyState.title : 'No chat selected' }}
+                        </div>
+                        <div class="text-body2 text-grey-7 q-mt-xs">
+                          {{ selectedContact ? emptyState.subtitle : 'Choose a contact from the left' }}
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </q-scroll-area>
+              </div>
+
+              <!-- INPUT BAR -->
+              <div class="row items-center q-pa-md q-gutter-sm input-bar">
+                <q-input
+                  v-model="draftMessage"
+                  filled
+                  class="col"
+                  placeholder="Write a message"
+                  @keyup.enter.prevent="handleEnterKey"
+                />
+                <q-btn flat round dense icon="mood" />
+                <q-btn flat round dense icon="send" color="primary" @click="sendMessage" />
+              </div>
+            </template>
+          </div>
         </div>
-      </div>
-    </div>
-  </q-page>
+      </q-page>
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
 
 const search = ref('')
+const searchInput = ref(null)
 const draftMessage = ref('')
-const currentUserName = ref('You')
 const messages = ref([])
-const starred = ref([])
 const showSettings = ref(false)
-const privacyOption = ref('contacts_groups')
-const useEnterToSend = ref(true)
-const directory = ref([
-  { id: 6, name: 'John Doe', status: 'Offline' },
-  { id: 7, name: 'Sarah Smith', status: 'Online' },
-  { id: 8, name: 'Emily White', status: 'Offline' },
-  { id: 9, name: 'Michael Brown', status: 'Online' },
-])
+const directory = ref([])
 const selectedContact = ref(null)
+const socket = ref(null)
+const apiBase = 'http://127.0.0.1:8000/api'
+const wsBase = 'ws://127.0.0.1:8000'
+const currentUserId = ref(null)
+const chattedIdsKey = 'chatted_contact_ids_v3'
+const chattedIdsStore = ref({})
+const nicknamesKey = 'contact_nicknames_v2'
+const nicknamesStore = ref({})
 
-const filterItems = (items) => {
-  const term = search.value.toLowerCase().trim()
-  if (!term) return items
-  return items.filter((i) => i.name.toLowerCase().includes(term))
+const getContactIdFromConversation = (room, senderId) => {
+  if (!room || !currentUserId.value) return null
+  const [a, b] = `${room}`.split('_').map((n) => Number(n))
+  if (Number.isNaN(a) || Number.isNaN(b)) return null
+  if (a === currentUserId.value && !Number.isNaN(b)) return b
+  if (b === currentUserId.value && !Number.isNaN(a)) return a
+  // fallback: infer from sender
+  return senderId && senderId !== currentUserId.value ? senderId : null
 }
 
-const filteredStarred = computed(() => filterItems(starred.value))
-const privateChats = computed(() => {
-  const seen = new Map()
-  messages.value.forEach((msg) => {
-    if (!msg.contactId || msg.contactId === 'self') return
-    if (!seen.has(msg.contactId)) {
-      const fromDir = directory.value.find((u) => u.id === msg.contactId)
-      seen.set(msg.contactId, {
-        id: msg.contactId,
-        name: fromDir?.name || msg.senderName || 'Unknown',
-        status: fromDir?.status || 'Online',
-      })
-    }
-  })
-  return Array.from(seen.values())
+const persistChattedIds = () => {
+  try {
+    localStorage.setItem(chattedIdsKey, JSON.stringify(chattedIdsStore.value))
+  } catch {
+    // ignore storage failures
+  }
+}
+
+const currentNicknames = computed(() => {
+  if (!currentUserId.value) return {}
+  return nicknamesStore.value[currentUserId.value] || {}
 })
-const filteredPrivate = computed(() => filterItems(privateChats.value))
 
-const visibleMessages = computed(() =>
-  messages.value.filter((msg) => msg.contactId === selectedContact.value?.id),
-)
-
-const isSelf = computed(
-  () =>
-    selectedContact.value?.id === 'self' || selectedContact.value?.name === currentUserName.value,
-)
-
-const isStarredContact = computed(
-  () => !!starred.value.find((c) => c.id === selectedContact.value?.id),
-)
-
-const emptyState = computed(() =>
-  isSelf.value
-    ? {
-        title: 'Personal space',
-        subtitle: 'Save draft messages, links, notes etc. to access later.',
-      }
-    : {
-        title: 'No messages yet',
-        subtitle: 'Send a message to start the conversation.',
-      },
-)
-
-const setCurrentUserAsStarred = () => {
-  const storedName = localStorage.getItem('username')
-  currentUserName.value = storedName && storedName.trim() ? storedName : 'You'
-  selectedContact.value = {
-    id: 'self',
-    name: currentUserName.value,
-    status: 'Online',
-  }
-  const selfEntry = starred.value.find((c) => c.id === 'self')
-  if (!selfEntry) {
-    starred.value = [
-      {
-        id: 'self',
-        name: currentUserName.value,
-        status: 'Online',
-      },
-      ...starred.value,
-    ]
-  } else {
-    // ensure display name stays in sync
-    selfEntry.name = currentUserName.value
-    selfEntry.status = 'Online'
-  }
-  messages.value = []
-}
-
-const selectContact = (contact) => {
-  selectedContact.value = contact
-}
-
-const selectStarredContact = (contact) => {
-  if (contact.id === 'self') {
-    selectedContact.value = {
-      id: 'self',
-      name: currentUserName.value,
-      status: 'Online',
-    }
-    return
-  }
-  const fromPrivate = privateChats.value.find((c) => c.id === contact.id)
-  selectedContact.value = fromPrivate || contact
-}
-
-const toggleStarContact = () => {
-  if (!selectedContact.value) return
-  const exists = starred.value.find((c) => c.id === selectedContact.value.id)
-  if (exists) {
-    starred.value = starred.value.filter((c) => c.id !== selectedContact.value.id)
-  } else {
-    starred.value = [...starred.value, { ...selectedContact.value }]
+const persistNicknames = () => {
+  try {
+    localStorage.setItem(nicknamesKey, JSON.stringify(nicknamesStore.value))
+  } catch {
+    // ignore storage failures
   }
 }
 
-const deleteContact = () => {
-  if (!selectedContact.value || selectedContact.value.id === 'self') return
-  const id = selectedContact.value.id
-  starred.value = starred.value.filter((c) => c.id !== id)
-  messages.value = messages.value.filter((m) => m.contactId !== id)
-  selectedContact.value = null
+const isEmailLike = (val) => typeof val === 'string' && val.includes('@')
+
+const deriveBaseName = (contact) => {
+  if (!contact) return 'User'
+  const { baseName, full_name, name, username, email, id } = contact
+  const emailKey = typeof email === 'string' ? email.toLowerCase() : null
+  const local = emailKey && emailKey.includes('@') ? emailKey.split('@')[0] : null
+  const candidates = [baseName, full_name, name, username, local]
+  const nonEmail = candidates.find((c) => c && !isEmailLike(c))
+  if (nonEmail) return nonEmail
+  if (id) return `User ${id}`
+  return 'User'
 }
 
-const toggleSettings = () => {
+const applyNickname = (id, fallbackName) => {
+  if (!id) return fallbackName
+  const stored = currentNicknames.value?.[id]
+  return stored && stored.trim() ? stored : fallbackName
+}
+
+const currentChattedIds = computed(() => {
+  if (!currentUserId.value) return new Set()
+  return new Set(chattedIdsStore.value[currentUserId.value] || [])
+})
+
+const mergeChattedIds = (userId, ids) => {
+  if (!userId || !ids) return
+  const next = new Set(chattedIdsStore.value[userId] || [])
+  ids.forEach((id) => next.add(id))
+  chattedIdsStore.value = { ...chattedIdsStore.value, [userId]: Array.from(next) }
+}
+
+const addChattedContact = (id) => {
+  if (!id || !currentUserId.value) return
+  const userId = currentUserId.value
+  const current = new Set(chattedIdsStore.value[userId] || [])
+  if (current.has(id)) return
+  current.add(id)
+  chattedIdsStore.value = { ...chattedIdsStore.value, [userId]: Array.from(current) }
+  persistChattedIds()
+}
+
+const removeChattedContact = (id) => {
+  if (!id || !currentUserId.value) return
+  const userId = currentUserId.value
+  const current = new Set(chattedIdsStore.value[userId] || [])
+  if (!current.has(id)) return
+  current.delete(id)
+  chattedIdsStore.value = { ...chattedIdsStore.value, [userId]: Array.from(current) }
+  persistChattedIds()
+}
+
+const scrollArea = ref(null)
+
+function toggleSettings() {
   showSettings.value = !showSettings.value
 }
 
+function startNewChat() {
+  search.value = ''
+  nextTick(() => {
+    if (searchInput.value) {
+      searchInput.value.focus()
+    }
+  })
+}
 
-onMounted(() => {
-  setCurrentUserAsStarred()
+function deleteContact() {
+  if (!selectedContact.value) return
+  const id = selectedContact.value.id
+  messages.value = messages.value.filter((m) => m.contactId !== id)
+  directory.value = directory.value.filter((d) => d.id !== id)
+  removeChattedContact(id)
+  selectedContact.value = null
+}
+
+function changeNickname() {
+  if (!selectedContact.value || !currentUserId.value) return
+  const current = selectedContact.value.name || ''
+  const input = window.prompt('Enter a nickname for this contact:', current)
+  if (input === null) return
+  const name = input.trim()
+  if (!name) return
+
+  selectedContact.value = { ...selectedContact.value, name }
+
+  const userMap = nicknamesStore.value[currentUserId.value] || {}
+  nicknamesStore.value = {
+    ...nicknamesStore.value,
+    [currentUserId.value]: { ...userMap, [selectedContact.value.id]: name },
+  }
+  persistNicknames()
+
+  directory.value = directory.value.map((d) =>
+    d.id === selectedContact.value.id ? { ...d, name } : d,
+  )
+
+  messages.value = messages.value.map((m) =>
+    m.contactId === selectedContact.value.id
+      ? { ...m, senderName: name }
+      : m.senderId === selectedContact.value.id
+      ? { ...m, senderName: name }
+      : m,
+  )
+}
+
+function removeNickname() {
+  if (!selectedContact.value || !currentUserId.value) return
+  const userMap = { ...(nicknamesStore.value[currentUserId.value] || {}) }
+  delete userMap[selectedContact.value.id]
+  nicknamesStore.value = { ...nicknamesStore.value, [currentUserId.value]: userMap }
+  persistNicknames()
+
+  const baseName = deriveBaseName(selectedContact.value)
+  selectedContact.value = { ...selectedContact.value, name: baseName }
+
+  directory.value = directory.value.map((d) =>
+    d.id === selectedContact.value.id ? { ...d, name: baseName } : d,
+  )
+
+  messages.value = messages.value.map((m) =>
+    m.contactId === selectedContact.value.id
+      ? { ...m, senderName: baseName }
+      : m.senderId === selectedContact.value.id
+      ? { ...m, senderName: baseName }
+      : m,
+  )
+}
+
+function selectContact(contact) {
+  selectedContact.value = contact
+}
+
+const messageContactIds = computed(() => {
+  const ids = new Set()
+  messages.value.forEach((m) => {
+    if (m.contactId) {
+      ids.add(m.contactId)
+      return
+    }
+    const inferred = getContactIdFromConversation(m.room, m.senderId)
+    if (inferred) ids.add(inferred)
+    if (m.senderId && m.senderId !== currentUserId.value) ids.add(m.senderId)
+  })
+  return ids
 })
+
+const chattedDirectory = computed(() => {
+  const ids = new Set([...currentChattedIds.value, ...messageContactIds.value])
+  const fromDirectory = directory.value.filter((u) => ids.has(u.id))
+
+  const byId = new Map(fromDirectory.map((u) => [u.id, u]))
+
+  const missing = []
+  ids.forEach((id) => {
+    if (byId.has(id)) return
+    const msg = messages.value.find((m) => m.contactId === id || m.senderId === id)
+    const baseName = deriveBaseName({ id, name: msg?.senderName, email: msg?.senderName })
+    missing.push({
+      id,
+      baseName,
+      name: applyNickname(id, baseName),
+      status: 'Online',
+    })
+  })
+
+  return [...fromDirectory, ...missing]
+})
+
+const filteredPrivate = computed(() => {
+  const term = (search.value || '').toLowerCase().trim()
+  if (!term) return chattedDirectory.value
+  // When searching, allow results from the full directory (including non-chatted users)
+  return directory.value.filter((u) => u.name.toLowerCase().includes(term))
+})
+
+const emptyState = computed(() =>
+  selectedContact.value
+    ? { title: 'No messages yet', subtitle: 'Start the conversation' }
+    : { title: 'No chat selected', subtitle: 'Choose a contact from the left' },
+)
+
+const visibleMessages = computed(() =>
+  messages.value.filter(
+    (m) =>
+      selectedContact.value &&
+      m.room ===
+        `${Math.min(currentUserId.value, selectedContact.value.id)}_${Math.max(
+          currentUserId.value,
+          selectedContact.value.id,
+        )}`,
+  ),
+)
+
+// ⭐ Scroll function
+async function scrollToBottom() {
+  await nextTick()
+  if (scrollArea.value) {
+    const target = scrollArea.value.getScrollTarget()
+    target.scrollTo({ top: target.scrollHeight, behavior: 'smooth' })
+  }
+}
+
+function sendMessage() {
+  const text = draftMessage.value.trim()
+  if (!selectedContact.value || !text) return
+  if (!socket.value || socket.value.readyState !== WebSocket.OPEN) return
+
+  socket.value.send(JSON.stringify({ text }))
+  draftMessage.value = ''
+  addChattedContact(selectedContact.value.id)
+
+  scrollToBottom()
+}
+
+function handleEnterKey() {
+  sendMessage()
+}
+
+function closeSocket() {
+  if (socket.value) socket.value.close()
+  socket.value = null
+}
+
+watch(
+  () => selectedContact.value,
+  async (contact) => {
+    if (!contact || !currentUserId.value) {
+      closeSocket()
+      return
+    }
+
+    const roomKey = `${Math.min(currentUserId.value, contact.id)}_${Math.max(
+      currentUserId.value,
+      contact.id,
+    )}`
+
+    closeSocket()
+
+    const token = localStorage.getItem('access')
+    const wsUrl = `${wsBase}/ws/messages/${roomKey}/?token=${token}`
+
+    socket.value = new WebSocket(wsUrl)
+
+    socket.value.onmessage = async (evt) => {
+      try {
+        const data = JSON.parse(evt.data)
+
+        const contactId = getContactIdFromConversation(data.conversation_id, data.sender_id)
+        const displayName = applyNickname(contactId, data.sender_name)
+
+        messages.value.push({
+          id: data.id,
+          senderId: data.sender_id,
+          senderName: displayName,
+          text: data.text,
+          room: data.conversation_id,
+          contactId,
+        })
+
+        addChattedContact(contactId)
+
+        await nextTick()
+        scrollToBottom()
+      } catch {
+        //ignore
+      }
+    }
+
+    await nextTick()
+    scrollToBottom()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(closeSocket)
+
+onMounted(async () => {
+  try {
+    const storedNicknames = JSON.parse(localStorage.getItem(nicknamesKey) || '{}')
+    if (storedNicknames && typeof storedNicknames === 'object') {
+      nicknamesStore.value = storedNicknames
+    }
+  } catch {
+    // ignore malformed storage
+  }
+
+  const token = localStorage.getItem('access')
+
+  if (token) {
+    const meRes = await fetch(`${apiBase}/auth/me/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const me = await meRes.json()
+    currentUserId.value = me.id
+  }
+
+  const usersRes = await fetch(`${apiBase}/users/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const users = await usersRes.json()
+  directory.value = users.map((u) => {
+    const baseName = deriveBaseName({ ...u, id: u.id })
+    return {
+      ...u,
+      baseName,
+      name: applyNickname(u.id, baseName),
+    }
+  })
+
+  await nextTick()
+  scrollToBottom()
+})
+
+watch(
+  () => currentUserId.value,
+  () => {
+    // migrate chatted ids from old keys when user becomes known
+    try {
+      const stored = JSON.parse(localStorage.getItem(chattedIdsKey) || '{}')
+      if (stored && typeof stored === 'object') {
+        chattedIdsStore.value = stored
+      }
+
+      // migrate legacy map (v2) scoped per user; skip legacy array (v1) to avoid cross-user leakage
+      const legacyMap = JSON.parse(localStorage.getItem('chatted_contact_ids_v2') || '{}')
+      if (legacyMap && typeof legacyMap === 'object' && currentUserId.value) {
+        const legacyIds = legacyMap[currentUserId.value] || []
+        if (Array.isArray(legacyIds)) mergeChattedIds(currentUserId.value, legacyIds)
+      }
+
+      persistChattedIds()
+    } catch {
+      // ignore malformed storage
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
-.messages-page {
-  flex: 1;
+.messages-root {
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 }
@@ -351,21 +570,12 @@ onMounted(() => {
   min-height: 0;
 }
 
-.conversation-panel {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.conversation-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-
 .left-pane {
   display: flex;
   flex-direction: column;
+  flex: 0 0 280px;
+  max-width: 320px;
+  min-width: 240px;
   min-height: 0;
 }
 
@@ -374,9 +584,83 @@ onMounted(() => {
   border-bottom: 1px solid #e0e3e7;
 }
 
+.contact-item {
+  border-bottom: 1px solid #e0e3e7;
+}
+
+.contact-item:last-child {
+  border-bottom: none;
+}
+
 .contacts-list {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+}
+
+.conversation-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.header-bar {
+  flex-shrink: 0;
+  border-bottom: 1px solid #e0e3e7;
+  background: white;
+  margin-left: 1px;
+}
+
+.contact-header {
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.message-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-item {
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.msg-self {
+  background: #e8f5e9;
+  align-self: flex-end;
+}
+
+.msg-other {
+  background: #f5f5f5;
+  align-self: flex-start;
+}
+
+.input-bar {
+  flex-shrink: 0;
+  border-top: 1px solid #ddd;
+  background: #fafafa;
+  margin-left: 1px;
+  margin-bottom: 1px;
 }
 </style>

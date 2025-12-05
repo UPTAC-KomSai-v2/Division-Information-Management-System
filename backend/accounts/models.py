@@ -88,7 +88,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_full_name(self):
         """Return the full name of the user"""
         full_name = f"{self.first_name} {self.last_name}".strip()
-        return full_name if full_name else self.email
+        if full_name:
+            return full_name
+
+        # Backend-defined display names for known accounts
+        overrides = {
+            "matt@yahoo.com": "Matthew Dalomias",
+            "admin@test.com": "Administrator 1",
+            "admin@dims.com": "Administrator 2",
+        }
+        email_lower = (self.email or "").lower()
+        if email_lower in overrides:
+            return overrides[email_lower]
+
+        # Otherwise, fall back to email local-part before using full email
+        if email_lower and "@" in email_lower:
+            return email_lower.split("@")[0]
+        return self.email
 
     def get_short_name(self):
         """Return the short name of the user"""
