@@ -162,8 +162,42 @@
               class="conversation-body column q-pa-lg"
               style="background: #f7f9fb"
             >
-              <div class="text-h6 text-weight-bold">Settings</div>
-              <div class="text-body2 text-grey-7 q-mt-xs">No settings implemented</div>
+              <div class="text-h6 text-weight-bold q-mb-md">Settings</div>
+
+              <div class="column q-gutter-md">
+                <div class="column">
+                  <div class="text-subtitle1 text-weight-bold">Messaging</div>
+                  <div class="text-body2 text-grey-7">
+                    Choose how you send and view messages.
+                  </div>
+                  <div class="q-mt-sm">
+                    <q-toggle
+                      v-model="enterToSend"
+                      color="primary"
+                      label="Send on Enter (Shift+Enter for newline)"
+                    />
+                  </div>
+                  <div class="q-mt-sm">
+                    <q-toggle
+                      v-model="autoScroll"
+                      color="primary"
+                      label="Auto-scroll to newest messages"
+                    />
+                  </div>
+                </div>
+
+                <q-separator />
+
+                <div class="column">
+                  <div class="text-subtitle1 text-weight-bold">Contacts</div>
+                  <div class="text-body2 text-grey-7">
+                    Start a conversation with anyone in your directory.
+                  </div>
+                  <div class="q-mt-sm">
+                    <q-btn color="primary" outline icon="add" label="Create New Chat" @click="startNewChat" />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- CHAT VIEW -->
@@ -206,9 +240,11 @@
                 <q-input
                   v-model="draftMessage"
                   filled
+                  type="textarea"
+                  autogrow
                   class="col"
                   placeholder="Write a message"
-                  @keyup.enter.prevent="handleEnterKey"
+                  @keydown.enter="handleEnterKey"
                 />
                 <q-btn flat round dense icon="mood" />
                 <q-btn flat round dense icon="send" color="primary" @click="sendMessage" />
@@ -228,6 +264,8 @@ const search = ref('')
 const searchInput = ref(null)
 const newChatDialog = ref(false)
 const newChatSearch = ref('')
+const enterToSend = ref(true)
+const autoScroll = ref(true)
 const draftMessage = ref('')
 const messages = ref([])
 const showSettings = ref(false)
@@ -399,6 +437,7 @@ function removeNickname() {
 }
 
 function selectContact(contact) {
+  showSettings.value = false
   selectedContact.value = contact
 }
 
@@ -410,6 +449,7 @@ function selectNewChat(user) {
     status: user.status || 'Online',
     email: user.email,
   }
+  showSettings.value = false
   selectContact(contact)
   addChattedContact(contact.id)
 }
@@ -484,6 +524,7 @@ const visibleMessages = computed(() =>
 
 // ⭐ Scroll function
 async function scrollToBottom() {
+  if (!autoScroll.value) return
   await nextTick()
   if (scrollArea.value) {
     const target = scrollArea.value.getScrollTarget()
@@ -503,7 +544,10 @@ function sendMessage() {
   scrollToBottom()
 }
 
-function handleEnterKey() {
+function handleEnterKey(evt) {
+  if (!enterToSend.value) return
+  if (evt && evt.shiftKey) return
+  if (evt) evt.preventDefault()
   sendMessage()
 }
 
