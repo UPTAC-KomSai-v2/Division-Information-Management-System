@@ -173,3 +173,27 @@ class CommunicationEvent(models.Model):
             if self.end_date < self.start_date:
                 raise ValidationError("End date must be after start date.")
 
+
+class ChatMessage(models.Model):
+    """
+    Basic chat message model to support real-time messaging.
+    Conversation grouping is done via the conversation_id passed in the WebSocket URL.
+    """
+    conversation_id = models.CharField(max_length=255, db_index=True)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='chat_messages'
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['conversation_id', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.sender} @ {self.created_at:%Y-%m-%d %H:%M}: {self.text[:30]}"
+

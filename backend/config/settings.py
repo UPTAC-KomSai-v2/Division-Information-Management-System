@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'channels',
     'rest_framework',
     'corsheaders',
     'accounts',
@@ -80,6 +81,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database
@@ -164,6 +166,19 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+    # For production, switch to Redis:
+    # 'default': {
+    #     'BACKEND': 'channels_redis.core.RedisChannelLayer',
+    #     'CONFIG': {
+    #         'hosts': [('127.0.0.1', 6379)],
+    #     },
+    # },
 }
 
 SIMPLE_JWT = {
