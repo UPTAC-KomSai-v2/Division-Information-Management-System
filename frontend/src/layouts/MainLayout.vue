@@ -77,35 +77,7 @@ import EssentialLink from 'components/EssentialLink.vue'
 
 //const userRole = ref('admin') // replace with auth logic
 
-const messages = ref([
-  {
-    id: 1,
-    from: 'Sarah Smith',
-    preview: 'Can you review the updated roster before noon?',
-    time: '09:20 AM',
-    initials: 'SS',
-    avatarColor: 'bg-orange-2 text-orange-10',
-    unread: true
-  },
-  {
-    id: 2,
-    from: 'Operations Leads',
-    preview: 'Reminder: inspection team is on campus Thursday.',
-    time: 'Yesterday',
-    initials: 'OL',
-    avatarColor: 'bg-green-2 text-green-10',
-    unread: false
-  },
-  {
-    id: 3,
-    from: 'Helpdesk',
-    preview: 'Ticket #TCK-004 has been closed.',
-    time: 'Mon',
-    initials: 'HD',
-    avatarColor: 'bg-blue-2 text-blue-10',
-    unread: false
-  }
-])
+const messages = ref([])
 
 const router = useRouter()
 

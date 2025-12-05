@@ -271,6 +271,9 @@ const chattedIdsKey = 'chatted_contact_ids_v3'
 const chattedIdsStore = ref({})
 const nicknamesKey = 'contact_nicknames_v2'
 const nicknamesStore = ref({})
+const messageIds = ref(new Set())
+const backgroundSockets = ref(new Map())
+const historyPollHandle = ref(null)
 
 const selfContact = computed(() => {
   if (!currentUserId.value) return null
@@ -372,6 +375,118 @@ const removeChattedContact = (id) => {
 }
 
 const scrollArea = ref(null)
+const hasMessageId = (id) => id && messageIds.value.has(id)
+
+const recordMessage = (payload, { autoSelect = false } = {}) => {
+  const id = payload?.id
+  if (id && hasMessageId(id)) return
+
+  const fallbackId =
+    payload?.sender_id && payload.sender_id !== currentUserId.value ? payload.sender_id : null
+  const contactId =
+    getContactIdFromConversation(payload?.conversation_id, payload?.sender_id) || fallbackId
+  const userMatch = contactId ? findUserById(contactId) : null
+  const baseName = deriveBaseName(
+    userMatch || { id: contactId, name: payload?.sender_name, email: payload?.sender_email },
+  )
+  const displayName = applyNickname(contactId, baseName)
+
+  if (id) messageIds.value.add(id)
+
+  messages.value.push({
+    id,
+    senderId: payload?.sender_id,
+    senderName: displayName,
+    text: payload?.text,
+    room: payload?.conversation_id,
+    contactId,
+  })
+
+  addChattedContact(contactId)
+
+  if (
+    autoSelect &&
+    contactId &&
+    (!selectedContact.value || selectedContact.value.id === currentUserId.value)
+  ) {
+    const contact = userMatch
+      ? { ...userMatch, name: applyNickname(contactId, deriveBaseName(userMatch)) }
+      : {
+          id: contactId,
+          name: displayName,
+          status: 'Online',
+          email: payload?.sender_email,
+        }
+    selectContact(contact)
+  }
+}
+
+const closeBackgroundSockets = () => {
+  backgroundSockets.value.forEach((ws) => {
+    try {
+      ws.close()
+    } catch {
+      // ignore
+    }
+  })
+  backgroundSockets.value = new Map()
+}
+
+const openHistorySocket = (contactId) => {
+  if (!currentUserId.value || contactId === currentUserId.value) return
+  if (backgroundSockets.value.has(contactId)) return
+
+  const roomKey = `${Math.min(currentUserId.value, contactId)}_${Math.max(
+    currentUserId.value,
+    contactId,
+  )}`
+  const token = localStorage.getItem('access')
+  if (!token) return
+  const url = `${wsBase}/ws/messages/${roomKey}/?token=${token}`
+
+  try {
+    const ws = new WebSocket(url)
+    const sockets = new Map(backgroundSockets.value)
+    sockets.set(contactId, ws)
+    backgroundSockets.value = sockets
+
+    const scheduleReconnect = () => {
+      const updated = new Map(backgroundSockets.value)
+      updated.delete(contactId)
+      backgroundSockets.value = updated
+      setTimeout(() => openHistorySocket(contactId), 1000)
+    }
+
+    ws.onmessage = (evt) => {
+      try {
+        const data = JSON.parse(evt.data)
+        recordMessage(data, { autoSelect: false })
+      } catch {
+        // ignore malformed
+      }
+    }
+
+    ws.onerror = scheduleReconnect
+    ws.onclose = scheduleReconnect
+  } catch {
+    // ignore connection errors
+  }
+}
+
+const stopHistoryPolling = () => {
+  if (historyPollHandle.value) {
+    clearInterval(historyPollHandle.value)
+    historyPollHandle.value = null
+  }
+  closeBackgroundSockets()
+}
+
+const startHistoryPolling = () => {
+  if (historyPollHandle.value) return
+  historyPollHandle.value = setInterval(() => {
+    directory.value.forEach((u) => openHistorySocket(u.id))
+  }, 500)
+}
 
 function toggleSettings() {
   showSettings.value = !showSettings.value
@@ -596,25 +711,7 @@ watch(
     socket.value.onmessage = async (evt) => {
       try {
         const data = JSON.parse(evt.data)
-
-        const contactId = getContactIdFromConversation(data.conversation_id, data.sender_id)
-        const userMatch = contactId ? findUserById(contactId) : null
-        const baseName = deriveBaseName(
-          userMatch || { id: contactId, name: data.sender_name, email: data.sender_email },
-        )
-        const displayName = applyNickname(contactId, baseName)
-
-        messages.value.push({
-          id: data.id,
-          senderId: data.sender_id,
-          senderName: displayName,
-          text: data.text,
-          room: data.conversation_id,
-          contactId,
-        })
-
-        addChattedContact(contactId)
-
+        recordMessage(data, { autoSelect: true })
         await nextTick()
         scrollToBottom()
       } catch {
@@ -628,7 +725,10 @@ watch(
   { immediate: true },
 )
 
-onBeforeUnmount(closeSocket)
+onBeforeUnmount(() => {
+  stopHistoryPolling()
+  closeSocket()
+})
 
 onMounted(async () => {
   try {
@@ -653,7 +753,12 @@ onMounted(async () => {
   const usersRes = await fetch(`${apiBase}/users/`, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  const users = await usersRes.json()
+  const raw = await usersRes.json()
+  const users = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.results)
+    ? raw.results
+    : []
   directory.value = users.map((u) => {
     const baseName = deriveBaseName({ ...u, id: u.id })
     return {
@@ -663,10 +768,61 @@ onMounted(async () => {
     }
   })
 
+  // Prefetch history for directory contacts to surface new threads
+  const openHistorySocket = (contactId) => {
+    if (!currentUserId.value || contactId === currentUserId.value) return
+    const roomKey = `${Math.min(currentUserId.value, contactId)}_${Math.max(
+      currentUserId.value,
+      contactId,
+    )}`
+    const token = localStorage.getItem('access')
+    if (!token) return
+    const url = `${wsBase}/ws/messages/${roomKey}/?token=${token}`
+
+    try {
+      const ws = new WebSocket(url)
+      const sockets = new Map(backgroundSockets.value)
+      sockets.set(contactId, ws)
+      backgroundSockets.value = sockets
+
+      const cleanup = () => {
+        try {
+          ws.close()
+        } catch {
+          // ignore
+        }
+        const updated = new Map(backgroundSockets.value)
+        updated.delete(contactId)
+        backgroundSockets.value = updated
+      }
+
+      ws.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data)
+          recordMessage(data, { autoSelect: false })
+        } catch {
+          // ignore malformed
+        }
+      }
+
+      ws.onopen = () => {
+        setTimeout(cleanup, 1500)
+      }
+      ws.onerror = cleanup
+      ws.onclose = cleanup
+    } catch {
+      // ignore connection errors
+    }
+  }
+
+  directory.value.forEach((u) => openHistorySocket(u.id))
+
   if (!selectedContact.value && selfContact.value) {
     selectedContact.value = selfContact.value
     addChattedContact(selfContact.value.id)
   }
+
+  startHistoryPolling()
 
   await nextTick()
   scrollToBottom()
@@ -804,3 +960,4 @@ watch(
   margin-bottom: 1px;
 }
 </style>
+
