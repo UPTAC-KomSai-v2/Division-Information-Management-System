@@ -15,7 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 from accounts.views import MeView, AdminOnlyView, EmailTokenObtainPairView
 
@@ -33,4 +35,26 @@ urlpatterns = [
 
     # Example admin-only endpoint
     path('api/admin-only/', AdminOnlyView.as_view(), name='admin_only'),
+    
+    # Documents API
+    path('api/', include('documents.urls')),
+    
+    # Communications API
+    path('api/', include('communications.urls')),
+    
+    # Memos API
+    path('api/', include('memos.urls')),
+    
+    # Tickets API
+    path('api/', include('tickets.urls')),
+    
+    # Calendar/Events API
+    path('api/', include('events.urls')),
+    
+    # Users/Directory API
+    path('api/', include('accounts.urls')),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
