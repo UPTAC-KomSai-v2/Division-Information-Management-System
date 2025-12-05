@@ -55,7 +55,7 @@
               <img src="~assets/dims_mini.png">
             </q-avatar>
 
-            <div class="text-subtitle1 q-my-sm">John Doe</div>
+            <div class="text-subtitle1 q-my-sm"> {{ currentUserName }}</div>
             <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/app/Profile')"/>
             <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="$router.push('/login')"/>
           </div>
@@ -157,8 +157,26 @@ const linksList = computed(() => {
 })
 
 const leftDrawerOpen = ref(false)
+const currentUserName = ref('User')
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+// read username from localStorage when layout loads
+onMounted(() => {
+  const storedName = localStorage.getItem('username')
+  if (storedName) {
+    currentUserName.value = storedName
+  }
+})
+
+function logout () {
+  // clear client auth data
+  localStorage.removeItem('access')
+  localStorage.removeItem('refresh')
+  localStorage.removeItem('username')
+
+  router.push('/login')
 }
 </script>

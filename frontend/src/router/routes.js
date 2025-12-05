@@ -35,6 +35,13 @@ const routes = [
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
   },
+
+
+  {
+    path: '/app/admin',
+    component: () => import('pages/AdminDashboard.vue'),
+    meta: { requiresAdmin: true }
+  },
 ]
 
 export default routes
