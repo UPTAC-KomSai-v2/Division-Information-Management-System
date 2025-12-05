@@ -3,6 +3,59 @@
     <q-page-container class="fit">
       <q-page class="column fit messages-root">
         <div class="messages-row row no-wrap fit">
+          <q-dialog v-model="newChatDialog" persistent>
+            <q-card style="min-width: 360px; max-width: 480px">
+              <q-card-section class="row items-center q-gutter-sm">
+                <div class="text-h6">Start a new chat</div>
+                <q-space />
+                <q-btn flat round dense icon="close" v-close-popup />
+              </q-card-section>
+
+              <q-card-section>
+                <q-input
+                  v-model="newChatSearch"
+                  dense
+                  outlined
+                  placeholder="Search all users"
+                  clearable
+                >
+                  <template #prepend>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-section style="max-height: 360px; padding-top: 0">
+                <q-scroll-area style="height: 360px">
+                  <q-list separator>
+                    <q-item
+                      v-for="user in filteredNewChat"
+                      :key="user.id"
+                      clickable
+                      @click="selectNewChat(user)"
+                    >
+                      <q-item-section avatar>
+                        <q-avatar color="grey-4" text-color="grey-9">
+                          <q-icon name="person" />
+                        </q-avatar>
+                      </q-item-section>
+                      <q-item-section>
+                        <div class="text-body1 text-weight-bold">{{ user.name }}</div>
+                        <div class="text-caption text-grey-7">{{ user.email }}</div>
+                      </q-item-section>
+                    </q-item>
+
+                    <div v-if="!filteredNewChat.length" class="q-pa-md text-grey-7 text-center">
+                      No users found
+                    </div>
+                  </q-list>
+                </q-scroll-area>
+              </q-card-section>
+            </q-card>
+          </q-dialog>
+
           <!-- LEFT SIDEBAR -->
           <div class="col-4 col-md-3 bg-grey-2 column left-pane">
             <div class="q-pa-sm pane-controls">
@@ -173,6 +226,8 @@ import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
 
 const search = ref('')
 const searchInput = ref(null)
+const newChatDialog = ref(false)
+const newChatSearch = ref('')
 const draftMessage = ref('')
 const messages = ref([])
 const showSettings = ref(false)
@@ -277,12 +332,8 @@ function toggleSettings() {
 }
 
 function startNewChat() {
-  search.value = ''
-  nextTick(() => {
-    if (searchInput.value) {
-      searchInput.value.focus()
-    }
-  })
+  newChatSearch.value = ''
+  newChatDialog.value = true
 }
 
 function deleteContact() {
@@ -351,6 +402,18 @@ function selectContact(contact) {
   selectedContact.value = contact
 }
 
+function selectNewChat(user) {
+  newChatDialog.value = false
+  const contact = {
+    id: user.id,
+    name: applyNickname(user.id, deriveBaseName(user)),
+    status: user.status || 'Online',
+    email: user.email,
+  }
+  selectContact(contact)
+  addChattedContact(contact.id)
+}
+
 const messageContactIds = computed(() => {
   const ids = new Set()
   messages.value.forEach((m) => {
@@ -389,9 +452,16 @@ const chattedDirectory = computed(() => {
 
 const filteredPrivate = computed(() => {
   const term = (search.value || '').toLowerCase().trim()
-  if (!term) return chattedDirectory.value
-  // When searching, allow results from the full directory (including non-chatted users)
-  return directory.value.filter((u) => u.name.toLowerCase().includes(term))
+  const baseList = chattedDirectory.value
+  if (!term) return baseList
+  return baseList.filter((u) => u.name.toLowerCase().includes(term))
+})
+
+const filteredNewChat = computed(() => {
+  const term = (newChatSearch.value || '').toLowerCase().trim()
+  const baseList = directory.value.filter((u) => u.id !== currentUserId.value)
+  if (!term) return baseList
+  return baseList.filter((u) => u.name.toLowerCase().includes(term))
 })
 
 const emptyState = computed(() =>
