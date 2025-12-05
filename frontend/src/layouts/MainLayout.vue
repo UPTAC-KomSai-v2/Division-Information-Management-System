@@ -57,7 +57,7 @@
 
             <div class="text-subtitle1 q-my-sm"> {{ currentUserName }}</div>
             <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/app/Profile')"/>
-            <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="$router.push('/login')"/>
+            <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="logout"/>
           </div>
         </q-btn-dropdown>
 
@@ -98,7 +98,8 @@
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
 
 //const userRole = ref('admin') // replace with auth logic
@@ -132,6 +133,8 @@ const messages = ref([
     unread: false
   }
 ])
+
+const router = useRouter()
 
 const unreadCount = computed(() => messages.value.filter(m => m.unread).length)
 
