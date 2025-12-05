@@ -272,6 +272,20 @@ const chattedIdsStore = ref({})
 const nicknamesKey = 'contact_nicknames_v2'
 const nicknamesStore = ref({})
 
+const selfContact = computed(() => {
+  if (!currentUserId.value) return null
+  const me = directory.value.find((u) => u.id === currentUserId.value)
+  const baseName =
+    (me && me.baseName) || (me && me.name) || deriveBaseName({ id: currentUserId.value })
+  return {
+    id: currentUserId.value,
+    name: applyNickname(currentUserId.value, baseName),
+    baseName,
+    status: 'Online',
+    email: me?.email,
+  }
+})
+
 const getContactIdFromConversation = (room, senderId) => {
   if (!room || !currentUserId.value) return null
   const [a, b] = `${room}`.split('_').map((n) => Number(n))
@@ -302,6 +316,8 @@ const persistNicknames = () => {
     // ignore storage failures
   }
 }
+
+const findUserById = (id) => directory.value.find((u) => u.id === id)
 
 const isEmailLike = (val) => typeof val === 'string' && val.includes('@')
 
@@ -485,8 +501,16 @@ const chattedDirectory = computed(() => {
 const filteredPrivate = computed(() => {
   const term = (search.value || '').toLowerCase().trim()
   const baseList = chattedDirectory.value
-  if (!term) return baseList
-  return baseList.filter((u) => u.name.toLowerCase().includes(term))
+  const withSelf = (() => {
+    const self = selfContact.value
+    if (!self) return baseList
+    const exists = baseList.find((u) => u.id === self.id)
+    if (exists) return baseList
+    if (term && !self.name.toLowerCase().includes(term)) return baseList
+    return [self, ...baseList]
+  })()
+  if (!term) return withSelf
+  return withSelf.filter((u) => u.name.toLowerCase().includes(term))
 })
 
 const filteredNewChat = computed(() => {
@@ -498,7 +522,9 @@ const filteredNewChat = computed(() => {
 
 const emptyState = computed(() =>
   selectedContact.value
-    ? { title: 'No messages yet', subtitle: 'Start the conversation' }
+    ? selectedContact.value.id === currentUserId.value
+      ? { title: 'Personal space', subtitle: 'Save draft messages, links, notes etc. to access later' }
+      : { title: 'No messages yet', subtitle: 'Start the conversation' }
     : { title: 'No chat selected', subtitle: 'Choose a contact from the left' },
 )
 
@@ -572,7 +598,11 @@ watch(
         const data = JSON.parse(evt.data)
 
         const contactId = getContactIdFromConversation(data.conversation_id, data.sender_id)
-        const displayName = applyNickname(contactId, data.sender_name)
+        const userMatch = contactId ? findUserById(contactId) : null
+        const baseName = deriveBaseName(
+          userMatch || { id: contactId, name: data.sender_name, email: data.sender_email },
+        )
+        const displayName = applyNickname(contactId, baseName)
 
         messages.value.push({
           id: data.id,
@@ -632,6 +662,11 @@ onMounted(async () => {
       name: applyNickname(u.id, baseName),
     }
   })
+
+  if (!selectedContact.value && selfContact.value) {
+    selectedContact.value = selfContact.value
+    addChattedContact(selfContact.value.id)
+  }
 
   await nextTick()
   scrollToBottom()
