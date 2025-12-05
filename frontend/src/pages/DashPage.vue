@@ -27,14 +27,20 @@
 
           <!-- CONTENT -->
           <div class="q-pa-md">
-            <q-list dense>
-              <q-item v-for="t in tickets.slice(0,3)" :key="t.id">
+            <q-list dense v-if="tickets.length > 0">
+              <q-item v-for="t in tickets.slice(0,5)" :key="t.ticket_id">
                 <q-item-section>
                   <div class="text-weight-bold">{{ t.title }}</div>
                   <div class="text-caption text-grey">{{ t.status }}</div>
                 </q-item-section>
               </q-item>
             </q-list>
+
+            <!-- ❗ Fallback when empty -->
+            <div v-else class="text-grey-6 text-caption q-pa-md flex flex-center">
+              <q-icon name="info" size="sm" class="q-mr-sm" />
+              No ticket information available.
+            </div>
           </div>
         </div>
       </div>
@@ -55,14 +61,22 @@
             />
           </div>
 
-          <div class="q-pa-sm">
+          <div class="q-pa-md">
             <q-list dense>
-              <q-item v-for="d in documents.slice(0,3)" :key="d.id">
-                <q-item-section>
-                  <div class="text-weight-bold">{{ d.name }}</div>
-                  <div class="text-caption text-grey">{{ d.type }} • {{ d.access }}</div>
-                </q-item-section>
-              </q-item>
+              <template v-if="documents.length">
+                <q-item v-for="d in documents.slice(0,5)" :key="d.id">
+                  <q-item-section>
+                    <div class="text-weight-bold">{{ d.name }}</div>
+                    <div class="text-caption text-grey">{{ d.type }} • {{ d.access }}</div>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <!-- ❗ Fallback when empty -->
+            <div v-else class="text-grey-6 text-caption q-pa-md flex flex-center">
+              <q-icon name="info" size="sm" class="q-mr-sm" />
+              No document information available.
+            </div>
             </q-list>
           </div>
         </div>
@@ -85,6 +99,7 @@
           </div>
 
           <div class="q-pa-md full-height">
+            <div v-if="events.length > 0">
             <q-date
               v-model="selectedDate"
               :events="events.map(e => e.date)"
@@ -94,7 +109,12 @@
               class="full-width"
             />
           </div>
-
+          <!-- ❗ Fallback -->
+            <div v-else class="text-grey-6 text-caption q-pa-md flex flex-center">
+              <q-icon name="info" size="sm" class="q-mr-sm" />
+              No events available.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -115,10 +135,12 @@
           </div>
 
           <div class="q-pa-md">
-            <q-list dense>
-              <q-item v-for="p in people.slice(0,3)" :key="p.id">
+            <q-list dense v-if="people.length > 0">
+              <q-item v-for="p in people.slice(0,5)" :key="p.id">
                 <q-item-section avatar>
-                  <q-avatar size="42px" :class="p.avatarColor" class="flex flex-center text-weight-bold"> {{ p.initials }} </q-avatar>
+                  <q-avatar size="42px" :class="p.avatarColor" class="flex flex-center text-weight-bold">
+                    {{ p.initials }}
+                  </q-avatar>
                 </q-item-section>
 
                 <q-item-section>
@@ -127,6 +149,12 @@
                 </q-item-section>
               </q-item>
             </q-list>
+
+            <!-- ❗ Fallback when empty -->
+            <div v-else class="text-grey-6 text-caption q-pa-md flex flex-center">
+              <q-icon name="info" size="sm" class="q-mr-sm" />
+              No staff information available.
+            </div>
           </div>
         </div>
       </div>
@@ -235,55 +263,61 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-    const selectedDate = ref('2025/11/25')
-    
-    defineProps({
-      isAdmin: Boolean
+import { ref, onMounted } from 'vue'
+import { api } from 'boot/axios'
+
+defineProps({
+  isAdmin: Boolean
+})
+
+const events = ref([])
+const selectedDate = ref(new Date().toISOString().slice(0, 10))
+
+onMounted(() => {
+  api.get("http://localhost:8000/api/events/")
+    .then(res => {
+      events.value = res.data.slice(0, 5)   // only display first 5 on dashboard
     })
+    .catch(err => {
+      console.error("Error loading dashboard events:", err)
+    })
+})
 
-    const events = [
-      { date: '2025/11/25', title: 'Faculty Meeting', description: 'Meeting with department heads.' },
-      { date: '2025/11/25', title: 'IT Maintenance', description: 'Scheduled downtime from 2-4PM.' },
-      { date: '2019/02/05', title: 'Workshop', description: 'Technical writing workshop.' },
-      { date: '2019/02/06', title: 'Seminar', description: 'Campus seminar event.' }
-    ]
 
-    const tickets = [
-      { id: 1, title: 'Printer not working', status: 'Open' },
-      { id: 2, title: 'Login error', status: 'In Progress' },
-      { id: 3, title: 'Network downtime', status: 'Resolved' }
-    ]
+const tickets = ref([])
 
-    const documents = [
-      { id: 1, name: 'Campus Memo 2025', type: 'Memo', access: 'Public' },
-      { id: 2, name: 'Award List Q1', type: 'Award', access: 'Permitted' },
-      { id: 3, name: 'Research Paper', type: 'Publication', access: 'Restricted' }
-    ]
+onMounted(() => {
+  api.get("http://localhost:8000/api/tickets/")
+    .then(res => {
+      tickets.value = res.data
+    })
+    .catch(err => {
+      console.error("Error loading dashboard tickets:", err)
+    })
+})
 
-    const people = [
-  {
-    id: 1,
-    name: 'John Doe',
-    position: 'Director',
-    initials: 'JD',
-    avatarColor: 'bg-red-2 text-red-10'
-  },
-  {
-    id: 2,
-    name: 'Sarah Smith',
-    position: 'IT Specialist',
-    initials: 'SS',
-    avatarColor: 'bg-orange-2 text-orange-10'
-  },
-  {
-    id: 3,
-    name: 'Mark Lee',
-    position: 'Staff',
-    initials: 'ML',
-    avatarColor: 'bg-blue-2 text-blue-10'
-  }
-]
+
+const documents = ref([])
+
+onMounted(() => {
+  api.get('http://localhost:8000/api/documents/')
+    .then(response => {
+      documents.value = response.data
+    })
+    .catch(err => {
+      console.error("Error loading dashboard documents:", err)
+    })
+})
+
+
+const people = ref([])
+
+onMounted(() => {
+  api.get("http://localhost:8000/api/directory/")
+    .then(res => people.value = res.data.slice(0, 5))
+    .catch(err => console.error(err))
+})
+
 
 const type = ref(null)
 

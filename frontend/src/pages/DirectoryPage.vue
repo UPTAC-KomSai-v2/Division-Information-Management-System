@@ -13,7 +13,7 @@
     <q-dialog v-model="addUserDialog" persistent>
       <q-card style="min-width: 350px">
         <q-card-section class="bg-primary text-white">
-          <div class="text-h6 text-primary">Add User</div>
+          <div class="text-h6 ">Add User</div>
         </q-card-section>
 
         <q-card-section>
@@ -89,7 +89,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { api } from 'boot/axios'
 
 const roles = [ 'Division Admin', 'Staff', 'Faculty']
 const depts = [ 'Computer Science', 'Applied Mathematics', 'Biology', 'MS Environmental Science' ]
@@ -109,53 +110,14 @@ const columns = [
 ]
 
 // 2. Define Dummy Data
-const rows = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@division.gov',
-    initials: 'JD',
-    avatarColor: 'bg-red-2 text-red-10',
-    role: 'Administrator',
-    status: 'Active'
-  },
-  {
-    id: 2,
-    name: 'Sarah Smith',
-    email: 's.smith@division.gov',
-    initials: 'SS',
-    avatarColor: 'bg-orange-2 text-orange-10',
-    role: 'Project Manager',
-    status: 'Active'
-  },
-  {
-    id: 3,
-    name: 'Michael Brown',
-    email: 'm.brown@division.gov',
-    initials: 'MB',
-    avatarColor: 'bg-grey-3 text-grey-8',
-    role: 'Field Officer',
-    status: 'Inactive'
-  },
-  {
-    id: 4,
-    name: 'Emily White',
-    email: 'e.white@division.gov',
-    initials: 'EW',
-    avatarColor: 'bg-blue-2 text-blue-10',
-    role: 'Analyst',
-    status: 'On Leave'
-  },
-  {
-    id: 5,
-    name: 'David Lee',
-    email: 'd.lee@division.gov',
-    initials: 'DL',
-    avatarColor: 'bg-green-2 text-green-10',
-    role: 'Viewer',
-    status: 'Active'
-  }
-]
+const rows = ref([])
+
+onMounted(() => {
+  api.get('http://localhost:8000/api/directory/')   // change to your actual endpoint
+    .then(res => rows.value = res.data)
+    .catch(err => console.error(err))
+})
+
 
 const addUserDialog = ref(false)
 
@@ -165,18 +127,30 @@ const email = ref('')
 const role = ref('')
 const dept = ref('')
 
-function submitUser () {
-  console.log('User Added:')
-  console.log({
-    fname: fname.value,
-    lname: lname.value,
-    email: email.value,
-    role: role.value,
-    dept: dept.value
-  })
+async function submitUser() {
+  try {
+    const payload = {
+      fname: fname.value,
+      lname: lname.value,
+      email: email.value,
+      role: role.value,
+      dept: dept.value
+    }
 
-  addUserDialog.value = false
+    await api.post("http://localhost:8000/api/directory/", payload)
+
+    // refresh the table
+    const res = await api.get("http://localhost:8000/api/directory/")
+    rows.value = res.data
+
+    addUserDialog.value = false
+    resetForm()
+
+  } catch (err) {
+    console.error("Failed to add user:", err)
+  }
 }
+
 
 function resetForm() {
   fname.value = ''

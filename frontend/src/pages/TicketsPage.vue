@@ -4,13 +4,21 @@
     <div class="full-width row wrap items-center">
       <div class="q-mb-lg col-grow">
         <div class="text-h4 text-weight-bold text-primary">Services Center</div>
-        <div class="text-subtitle1 text-grey-8"> A dedicated support hub where users can submit tickets, track requests, and receive assistance</div>
+        <div class="text-subtitle1 text-grey-8">
+          A dedicated support hub where users can submit tickets, track requests, and receive assistance
+        </div>
       </div>
-      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
-        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="newTicket = true"> New Ticket</q-btn>
+
+      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center">
+        <q-btn class="bg-primary text-white" icon="add"
+               style="font-family: Arial, Helvetica, sans-serif;"
+               @click="newTicket = true">
+          New Ticket
+        </q-btn>
       </div>
     </div>
 
+    <!-- CREATE TICKET DIALOG -->
     <q-dialog v-model="newTicket" persistent>
       <q-card style="min-width: 350px">
         <q-card-section class="bg-primary text-white">
@@ -18,8 +26,8 @@
         </q-card-section>
 
         <q-card-section>
-          <q-input class="q-pa-sm" v-model="tktTitle" label="Title" outlined/>
-          <q-input class="q-pa-sm" v-model="tktDesc" label="Description" outlined/>
+          <q-input class="q-pa-sm" v-model="tktTitle" label="Title" outlined />
+          <q-input class="q-pa-sm" v-model="tktDesc" label="Description" outlined />
           <q-select class="q-pa-sm" v-model="tktPriority" :options="tktPriorities" label="Priority" outlined />
         </q-card-section>
 
@@ -30,142 +38,129 @@
       </q-card>
     </q-dialog>
 
-    <!-- Main Responsive Container -->
-    <div class="row q-col-gutter-md wrap" style="min-height: 70vh;" >
-      <!-- MIDDLE COLUMN -->
+    <!-- MAIN LAYOUT -->
+    <div class="row q-col-gutter-md wrap" style="min-height: 70vh;">
+      
+      <!-- LEFT COLUMN: LIST -->
       <div class="col-12 col-sm-9 col-md-4">
-        <div
-          class="q-pa-md full-height"
-          style="border: 1px solid var(--q-primary); border-radius: 8px;"
-        >
-          <q-input v-model="search" outlined class="full-width" placeholder="Search current and previous tickets..." debounce="300" clearable >
+        <div class="q-pa-md full-height" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+          
+          <q-input v-model="search" outlined class="full-width"
+                   placeholder="Search tickets..." debounce="300" clearable>
             <template #prepend>
               <q-icon name="search" />
             </template>
           </q-input>
 
-          <div v-if="filteredEvents.length">
+          <!-- LIST -->
+          <div v-if="filteredTickets.length">
             <q-list bordered separator class="q-mt-sm">
-              <q-item
-                clickable
-                v-for="(event, index) in filteredEvents"
-                :key="index"
-                @click="selectedEvent = event"
-              >
-                <q-item-section>{{ event.title }}</q-item-section>
+              <q-item v-for="ticket in filteredTickets" :key="ticket.ticket_id"
+                      clickable @click="selectedEvent = ticket">
+                <q-item-section>{{ ticket.title }}</q-item-section>
               </q-item>
             </q-list>
           </div>
 
-          <div v-else class="text-grey-6 text-caption q-mt-sm">
+          <!-- EMPTY -->
+          <div v-else class="text-grey-6 text-caption q-mt-sm flex flex-center">
+            <q-icon name="info" size="xs" class="q-mr-sm" />
             No ticket records.
           </div>
+
         </div>
       </div>
 
-      <!-- RIGHT COLUMN -->
-      <div
-        class="col-12 col-sm-9 col-md-8"
-      >
-        <div
-          class="q-pa-md full-height"
-          style="border: 1px solid var(--q-primary); border-radius: 8px;"
-        >
+      <!-- RIGHT COLUMN: DETAILS -->
+      <div class="col-12 col-sm-9 col-md-8">
+        <div class="q-pa-md full-height" style="border: 1px solid var(--q-primary); border-radius: 8px;">
+
           <div v-if="selectedEvent">
-            <div class="text-h6 text-weight-bold">Ticket ID: {{ selectedEvent.id }}</div>
+            <div class="text-h6 text-weight-bold">Ticket ID: {{ selectedEvent.ticket_id }}</div>
             <div class="text-subtitle1 text-weight-bold">Title: {{ selectedEvent.title }}</div>
+            <div class="text-body1">Priority: {{ selectedEvent.priority }}</div>
             <div class="text-body1">Status: {{ selectedEvent.status }}</div>
-            <div class="text-body1">Created By: {{ selectedEvent.creator }}</div>
+            <div class="text-body1">Created By: {{ selectedEvent.creator_email }}</div>
             <p class="q-mt-sm">Description: {{ selectedEvent.description }}</p>
           </div>
 
           <div v-else class="text-grey-6 text-caption">
             Select a ticket to view details.
           </div>
+
         </div>
       </div>
 
     </div>
-
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed, watch} from 'vue'
-const search = ref('')
+import { ref, computed, onMounted } from 'vue'
+import { api } from 'boot/axios'
+
+/* --- FORM FIELDS --- */
 const tktTitle = ref('')
 const tktDesc = ref('')
-const tktPriority = ref('MEDIUM')
+const tktPriority = ref('Medium')
 const newTicket = ref(false)
 
 const tktPriorities = [
   { label: 'Low', value: 'LOW' },
   { label: 'Medium', value: 'MEDIUM' },
   { label: 'High', value: 'HIGH' },
-  { label: 'Urgent', value: 'URGENT' },
+  { label: 'Urgent', value: 'URGENT' }
 ]
 
-let timer = null
-watch(search, val => {
-  clearTimeout(timer)
-  timer = setTimeout(() => console.log('Searching:', val), 300)
+/* --- TICKETS FROM BACKEND --- */
+const tickets = ref([])
+const selectedEvent = ref(null)
+const search = ref('')
+
+/* Load tickets from backend */
+async function loadTickets() {
+  try {
+    const response = await api.get('http://localhost:8000/api/tickets/')
+    tickets.value = response.data
+  } catch (err) {
+    console.error("Failed to load tickets:", err)
+  }
+}
+
+onMounted(() => {
+  loadTickets()
 })
 
-const selectedDate = ref('2025/11/25')
-const selectedEvent = ref(null)
+/* --- FILTERED LIST --- */
+const filteredTickets = computed(() => {
+  if (!search.value) return tickets.value
+  return tickets.value.filter(t =>
+    t.title.toLowerCase().includes(search.value.toLowerCase()) ||
+    t.ticket_id.toLowerCase().includes(search.value.toLowerCase())
+  )
+})
 
-const events = [
-  {
-    id: 'TCK-001',
-    date: '2025/11/25',
-    title: 'Faculty Meeting',
-    description: 'Meeting with department heads.',
-    status: 'Open',
-    creator: 'Admin Office'
-  },
-  {
-    id: 'TCK-002',
-    date: '2025/11/25',
-    title: 'IT Maintenance',
-    description: 'Scheduled downtime from 2-4PM.',
-    status: 'In Progress',
-    creator: 'IT Division'
-  },
-  {
-    id: 'TCK-003',
-    date: '2019/02/05',
-    title: 'Workshop',
-    description: 'Technical writing workshop.',
-    status: 'Closed',
-    creator: 'Training Division'
-  },
-  {
-    id: 'TCK-004',
-    date: '2019/02/06',
-    title: 'Seminar',
-    description: 'Campus seminar event.',
-    status: 'Closed',
-    creator: 'HR Department'
+/* --- CREATE NEW TICKET --- */
+async function submitTicket() {
+  try {
+    await api.post('http://localhost:8000/api/tickets/', {
+      title: tktTitle.value,
+      description: tktDesc.value,
+      priority: tktPriority.value
+    })
+
+    newTicket.value = false
+    resetForm()
+    loadTickets()
+
+  } catch (err) {
+    console.error("Failed to create ticket:", err)
   }
-]
-
-const filteredEvents = computed(() =>
-  events.filter(e => e.date === selectedDate.value)
-)
-
-function submitTicket() {
-  console.log("Submitting ticket:", {
-    title: tktTitle.value,
-    description: tktDesc.value,
-    priority: tktPriority.value,
-  })
-  newTicket.value = false
 }
 
 function resetForm() {
   tktTitle.value = ''
   tktDesc.value = ''
-  tktPriority.value = 'MEDIUM'
+  tktPriority.value = 'Medium'
 }
 </script>

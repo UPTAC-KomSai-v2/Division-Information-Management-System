@@ -14,7 +14,7 @@
     <q-dialog v-model="uploadDoc" persistent>
       <q-card style="min-width: 350px">
         <q-card-section class="bg-primary text-white">
-          <div class="text-h6 text-primary">Upload Document</div>
+          <div class="text-h6">Upload Document</div>
         </q-card-section>
 
         <q-card-section>
