@@ -6,6 +6,7 @@ import {
   createWebHashHistory,
 } from 'vue-router'
 import routes from './routes.js'
+<<<<<<< Updated upstream
 
 /*
  * If not building with SSR mode, you can
@@ -15,6 +16,8 @@ import routes from './routes.js'
  * async/await or return a Promise which resolves
  * with the Router instance.
  */
+=======
+>>>>>>> Stashed changes
 
 export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
