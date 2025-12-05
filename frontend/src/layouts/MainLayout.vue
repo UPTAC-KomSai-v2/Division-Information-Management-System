@@ -8,6 +8,10 @@
         <q-toolbar-title class="row items-center">
           <q-btn flat no-caps dense class="row items-center" @click="$router.push('/app/dashboard')">
             <img alt="DIMS logo" src="~assets/dims.png" style="width: 40px; height: 40px" />
+            <div class="column q-ml-sm items-start">
+              <div class="text-primary text-weight-bold">Division Information</div>
+              <div class="text-primary text-caption">Management System</div>
+            </div>
           </q-btn>
         </q-toolbar-title>
 
@@ -39,7 +43,12 @@
                 </q-item-section>
               </q-item>
               <q-separator />
-              <q-item clickable @click="$router.push('/app/messages')">
+              <q-item
+                clickable
+                v-close-popup
+                tag="router-link"
+                to="/app/messages"
+              >
                 <q-item-section class="text-primary text-weight-bold">View all messages</q-item-section>
                 <q-item-section side>
                   <q-icon name="chevron_right" />
@@ -143,6 +152,7 @@ const linksList = [
   {title: 'Directory', icon: 'contacts', to: '/app/directory'},
   {title: 'Documents Repository', icon: 'library_books', to: '/app/documents'},
   {title: 'Services Center', icon: 'build', to: '/app/services',},
+  {title: 'Messages', icon: 'chat', to: '/app/messages'},
 ]
 
 const leftDrawerOpen = ref(false)

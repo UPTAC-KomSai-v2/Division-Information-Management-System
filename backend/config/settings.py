@@ -82,12 +82,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # ✔ using psycopg driver
-        'NAME': 'dims_db',        # ✔ plain string, NOT BASE_DIR / '...'
-        'USER': 'postgres',       # change if your PG username is different
-        'PASSWORD': 'password',  # your real password
-        'HOST': '127.0.0.1',      # or 127.0.0.1
-        'PORT': '5432',           # default PostgreSQL port
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

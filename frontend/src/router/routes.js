@@ -39,7 +39,7 @@ const routes = [
 
   {
     path: '/app/admin',
-    component: () => import('pages/AdminDashboard.vue'),
+    component: () => import('pages/AdminPage.vue'),
     meta: { requiresAdmin: true }
   },
 ]
