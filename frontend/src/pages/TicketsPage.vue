@@ -8,25 +8,27 @@
       </div>
       <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
         <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="newTicket = true"> New Ticket</q-btn>
-         <q-dialog v-model="newTicket">
-          <q-card style="min-width: 400px; max-width: 600px;">
-            <q-card-section>
-              <div class="text-h6">Create New Ticket</div>
-            </q-card-section>
-
-            <q-card-section>
-              <q-input v-model="tktTitle" label="Title" outlined class="full-width" />
-              <q-input v-model="tktDesc" label="Description" outlined type="textarea" class="full-width q-mt-md" />
-            </q-card-section>
-
-            <q-card-actions align="right">
-              <q-btn flat label="Cancel" color="primary" v-close-popup />
-              <q-btn flat label="Submit" color="primary" @click="submitTicket" />
-            </q-card-actions>
-          </q-card>
-         </q-dialog>
       </div>
     </div>
+
+    <q-dialog v-model="newTicket" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6">Create New Ticket</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input class="q-pa-sm" v-model="tktTitle" label="Title" outlined/>
+          <q-input class="q-pa-sm" v-model="tktDesc" label="Description" outlined/>
+          <q-select class="q-pa-sm" v-model="tktPriority" :options="tktPriorities" label="Priority" outlined />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="secondary" v-close-popup @click="resetForm" />
+          <q-btn flat label="Add" color="primary" @click="submitTicket" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- Main Responsive Container -->
     <div class="row q-col-gutter-md wrap" style="min-height: 70vh;" >
@@ -89,12 +91,20 @@
 </template>
 
 
-<script>
+<script setup>
 import { ref, computed, watch} from 'vue'
 const search = ref('')
 const tktTitle = ref('')
 const tktDesc = ref('')
+const tktPriority = ref('MEDIUM')
 const newTicket = ref(false)
+
+const tktPriorities = [
+  { label: 'Low', value: 'LOW' },
+  { label: 'Medium', value: 'MEDIUM' },
+  { label: 'High', value: 'HIGH' },
+  { label: 'Urgent', value: 'URGENT' },
+]
 
 let timer = null
 watch(search, val => {
@@ -102,60 +112,60 @@ watch(search, val => {
   timer = setTimeout(() => console.log('Searching:', val), 300)
 })
 
-export default {
-  setup () {
-    const selectedDate = ref('2025/11/25')
-    const selectedEvent = ref(null)
+const selectedDate = ref('2025/11/25')
+const selectedEvent = ref(null)
 
-    const events = [
-      {
-        id: 'TCK-001',
-        date: '2025/11/25',
-        title: 'Faculty Meeting',
-        description: 'Meeting with department heads.',
-        status: 'Open',
-        creator: 'Admin Office'
-      },
-      {
-        id: 'TCK-002',
-        date: '2025/11/25',
-        title: 'IT Maintenance',
-        description: 'Scheduled downtime from 2-4PM.',
-        status: 'In Progress',
-        creator: 'IT Division'
-      },
-      {
-        id: 'TCK-003',
-        date: '2019/02/05',
-        title: 'Workshop',
-        description: 'Technical writing workshop.',
-        status: 'Closed',
-        creator: 'Training Division'
-      },
-      {
-        id: 'TCK-004',
-        date: '2019/02/06',
-        title: 'Seminar',
-        description: 'Campus seminar event.',
-        status: 'Closed',
-        creator: 'HR Department'
-      }
-    ]
-
-    const filteredEvents = computed(() =>
-      events.filter(e => e.date === selectedDate.value)
-    )
-
-    return {
-      search,
-      selectedDate,
-      selectedEvent,
-      events,
-      filteredEvents,
-      newTicket,
-      tktTitle,
-      tktDesc,
-    }
+const events = [
+  {
+    id: 'TCK-001',
+    date: '2025/11/25',
+    title: 'Faculty Meeting',
+    description: 'Meeting with department heads.',
+    status: 'Open',
+    creator: 'Admin Office'
+  },
+  {
+    id: 'TCK-002',
+    date: '2025/11/25',
+    title: 'IT Maintenance',
+    description: 'Scheduled downtime from 2-4PM.',
+    status: 'In Progress',
+    creator: 'IT Division'
+  },
+  {
+    id: 'TCK-003',
+    date: '2019/02/05',
+    title: 'Workshop',
+    description: 'Technical writing workshop.',
+    status: 'Closed',
+    creator: 'Training Division'
+  },
+  {
+    id: 'TCK-004',
+    date: '2019/02/06',
+    title: 'Seminar',
+    description: 'Campus seminar event.',
+    status: 'Closed',
+    creator: 'HR Department'
   }
+]
+
+const filteredEvents = computed(() =>
+  events.filter(e => e.date === selectedDate.value)
+)
+
+function submitTicket() {
+  console.log("Submitting ticket:", {
+    title: tktTitle.value,
+    description: tktDesc.value,
+    priority: tktPriority.value,
+  })
+  newTicket.value = false
+}
+
+function resetForm() {
+  tktTitle.value = ''
+  tktDesc.value = ''
+  tktPriority.value = 'MEDIUM'
 }
 </script>

@@ -5,10 +5,31 @@
         <div class="text-h4 text-weight-bold text-primary">Division Directory</div>
         <div class="text-subtitle1 text-grey-8">A quick-access directory listing all division staff and contact details</div>
       </div>
-      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
-        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')">Add User</q-btn>
+      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"  v-if="isAdmin"> 
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="addUserDialog = true" label="Add User"/>
       </div>
     </div>
+
+    <q-dialog v-model="addUserDialog" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6 text-primary">Add User</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input class="q-pa-sm" v-model="fname" label="First Name" outlined />
+          <q-input class="q-pa-sm" v-model="lname" label="Last Name" outlined />
+          <q-input class="q-pa-sm" v-model="email" label="Email" outlined />
+          <q-select class="q-pa-sm" outlined v-model="role" :options="roles" label="Role"/>
+          <q-select class="q-pa-sm" outlined v-model="dept" :options="depts" label="Department"/>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="secondary" v-close-popup @click="resetForm" />
+          <q-btn flat label="Add" color="primary" @click="submitUser" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
       <q-table
@@ -57,8 +78,8 @@
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn flat round color=primary icon="message" size="sm" class="q-mr-sm" />
-            <q-btn flat round color=primary icon="edit_square" size="sm" class="q-mr-sm" />
-            <q-btn flat round color=primary icon="delete" size="sm" class="q-mr-sm" />
+            <q-btn flat round color=primary icon="edit_square" size="sm" class="q-mr-sm" v-if="isAdmin"/>
+            <q-btn flat round color=primary icon="delete" size="sm" class="q-mr-sm" v-if="isAdmin"/>
           </q-td>
         </template>
 
@@ -70,7 +91,14 @@
 <script setup>
 import { ref } from 'vue'
 
+const roles = [ 'Division Admin', 'Staff', 'Faculty']
+const depts = [ 'Computer Science', 'Applied Mathematics', 'Biology', 'MS Environmental Science' ]
+
 const filter = ref('')
+
+ defineProps({
+    isAdmin: Boolean
+  })
 
 // 1. Define Table Columns
 const columns = [
@@ -128,6 +156,35 @@ const rows = [
     status: 'Active'
   }
 ]
+
+const addUserDialog = ref(false)
+
+const fname = ref('')
+const lname = ref('')
+const email = ref('')
+const role = ref('')
+const dept = ref('')
+
+function submitUser () {
+  console.log('User Added:')
+  console.log({
+    fname: fname.value,
+    lname: lname.value,
+    email: email.value,
+    role: role.value,
+    dept: dept.value
+  })
+
+  addUserDialog.value = false
+}
+
+function resetForm() {
+  fname.value = ''
+  lname.value = ''
+  email.value = ''
+  role.value = ''
+  dept.value = ''
+}
 
 // 3. Helper for Status Colors
 const getStatusColor = (status) => {

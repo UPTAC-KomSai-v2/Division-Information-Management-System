@@ -6,10 +6,29 @@
         <div class="text-h4 text-weight-bold text-primary">Document Repository</div>
         <div class="text-subtitle1 text-grey-8">A centralized storage hub for securely organizing, and accessing all institutional documents.</div>
       </div>
-      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center"> 
-        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')"> Upload File</q-btn>
+      <div class="q-mx-md q-mb-md flex flex-center justify-center items-center "  v-if="isAdmin"> 
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="uploadDoc = true"> Upload File</q-btn>
       </div>
     </div>
+
+    <q-dialog v-model="uploadDoc" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6 text-primary">Upload Document</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input class="q-pa-sm" v-model="dname" label="File Name" outlined />
+          <q-input class="q-pa-sm" v-model="ddesc" label="File Description" outlined/>
+          <q-uploader ref="uploaderRef" class="q-ma-sm full-width" url="http://localhost:4444/upload" label="Upload File" square flat bordered multiple batch no-thumbnails @added="onFileAdded" :auto-upload="false"/>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="secondary" v-close-popup @click="resetForm" />
+          <q-btn flat label="Add" color="primary" @click="submitDocument" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
       <q-table
@@ -62,51 +81,80 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { api } from 'boot/axios'
 
 const filter = ref('')
 
+defineProps({
+  isAdmin: Boolean
+})
+
 // 1. Define Table Columns
 const columns = [
-  { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: true },
+  { name: 'filename', required: true, label: 'File Name', align: 'left', field: 'filename', sortable: true },
   { name: 'type', align: 'left', label: 'Type', field: 'type', sortable: true },
   { name: 'access', align: 'left', label: 'Access Status', field: 'access', sortable: true },
   { name: 'actions', align: 'right', label: 'Actions', field: 'actions' }
 ]
 
-// 2. Define Dummy Data
-const rows = [
-  {
-    id: 1,
-    name: 'John Doe',
-    type: 'Publication',
-    access: 'Restricted'
-  },
-  {
-    id: 2,
-    name: 'Sarah Smith',
-    type: 'Memos',
-    access: 'Public'
-  },
-  {
-    id: 3,
-    name: 'Michael Brown',
-    type: 'Memos',
-    access: 'Public'
-  },
-  {
-    id: 4,
-    name: 'Emily White',
-    type: 'Awards',
-    access: 'Restricted'
-  },
-  {
-    id: 5,
-    name: 'David Lee',
-    type: 'Publication',
-    access: 'Permitted'
+const uploadDoc = ref(false)
+
+const dname = ref('')
+const ddesc = ref('')
+const fileList = ref([])
+
+function onFileAdded(files) {
+  fileList.value = files
+}
+
+async function submitDocument() {
+  const formData = new FormData()
+  formData.append('name', dname.value)
+  formData.append('description', ddesc.value)
+
+  fileList.value.forEach(file => {
+    formData.append('file', file)   // adjust field name based on your Django serializer
+  })
+
+  try {
+    await api.post('http://localhost:8000/api/documents/', formData, { //replace with link to your backend endpoint
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    // Refresh table after upload
+    const response = await api.get('http://localhost:8000/api/documents/') //replace with link to your backend endpoint
+    rows.value = response.data
+
+    uploadDoc.value = false
+    resetForm()
+
+  } catch (err) {
+    console.error("Upload failed:", err)
   }
-]
+}
+
+
+function resetForm() {
+  dname.value = ''
+  ddesc.value = ''
+  fileList.value = []
+}
+
+// 2. Define Dummy Data
+const rows = ref([])
+
+onMounted(() => {
+  api.get('http://localhost:8000/api/documents/')
+    .then(response => {
+      rows.value = response.data
+    })
+    .catch(err => {
+      console.error("Error loading documents:", err)
+    })
+})
+
+const uploaderRef = ref(null)
 
 // 3. Helper for Access Colors
 const getAccessColor = (access) => {

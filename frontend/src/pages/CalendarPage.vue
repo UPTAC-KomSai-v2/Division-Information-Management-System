@@ -6,10 +6,42 @@
         <div class="text-h4 text-weight-bold text-primary">Calendar</div>
         <div class="text-subtitle1 text-grey-8">A Quick Glance at Upcoming Events</div>
       </div>
-      <div class="q-ma-xs flex flex-center justify-center items-center"> 
-        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')"> Add Event</q-btn>
+      <div class="q-ma-xs flex flex-center justify-center items-center" v-if="isAdmin"> 
+        <q-btn class="bg-primary text-white" icon="add" style="font-family: Arial, Helvetica, sans-serif;" label="Add Event" @click="addEvent = true"/>
       </div>
     </div>
+
+    <q-dialog v-model="addEvent" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6 text-primary">Add Event</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input class="q-pa-sm" v-model="ename" label="Event Name" outlined />
+          <div class="q-pa-sm">
+            <q-input outlined v-model="dateTime" label="Event Date & Time" readonly >
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer" @click="showPicker = true" />
+              </template>
+
+              <q-popup-proxy v-model="showPicker" transition-show="scale" transition-hide="scale">
+                <q-date v-model="date" mask="YYYY-MM-DD" landscape @update:model-value="updateDateTime"/>
+                <q-time class="q-mt-md" v-model="time" format24h @update:model-value="updateDateTime"/>
+              </q-popup-proxy>
+            </q-input>
+          </div>
+          <q-input class="q-pa-sm" v-model="edesc" label="Event Description" outlined/>
+          <q-input class="q-pa-sm" v-model="etype" label="Event Type" outlined />
+          <q-input class="q-pa-sm" v-model="evenue" label="Event Venue" outlined />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="secondary" v-close-popup @click="resetForm" />
+          <q-btn flat label="Add" color="primary" @click="submitEvent" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- Main Responsive Container -->
     <div class="row q-col-gutter-md wrap" style="min-height: 70vh;" >
@@ -83,31 +115,62 @@
 </template>
 
 
-<script>
+<script setup>
 import { ref, computed } from 'vue'
 
-export default {
-  setup () {
-    const selectedDate = ref('2025/11/25')
-    const selectedEvent = ref(null)
+  defineProps({
+    isAdmin: Boolean
+  })
 
-    const events = [
-      { date: '2025/11/25', title: 'Faculty Meeting', description: 'Meeting with department heads.' },
-      { date: '2025/11/25', title: 'IT Maintenance', description: 'Scheduled downtime from 2-4PM.' },
-      { date: '2019/02/05', title: 'Workshop', description: 'Technical writing workshop.' },
-      { date: '2019/02/06', title: 'Seminar', description: 'Campus seminar event.' }
-    ]
+  const selectedDate = ref('2025/11/25')
+  const selectedEvent = ref(null)
 
-    const filteredEvents = computed(() =>
-      events.filter(e => e.date === selectedDate.value)
-    )
+  const events = [
+    { date: '2025/11/25', title: 'Faculty Meeting', description: 'Meeting with department heads.' },
+    { date: '2025/11/25', title: 'IT Maintenance', description: 'Scheduled downtime from 2-4PM.' },
+    { date: '2019/02/05', title: 'Workshop', description: 'Technical writing workshop.' },
+    { date: '2019/02/06', title: 'Seminar', description: 'Campus seminar event.' }
+  ]
 
-    return {
-      selectedDate,
-      selectedEvent,
-      events,
-      filteredEvents
+  const filteredEvents = computed(() => events.filter(e => e.date === selectedDate.value) )
+
+  const addEvent = ref(false)
+
+  const ename = ref('')
+  const dateTime = ref('')
+  const edesc = ref('')
+  const etype = ref('')
+  const evenue = ref('')
+
+  const showPicker = ref(false)
+  const date = ref('')
+  const time = ref('')
+
+  function updateDateTime () {
+    if (date.value && time.value) {
+      dateTime.value = `${date.value} ${time.value}`
     }
   }
-}
+
+  function submitEvent () {
+    console.log('User Added:')
+    console.log({
+      ename: ename.value,
+      dateTime: dateTime.value,
+      edesc: edesc.value,
+      etype: etype.value,
+      evenue: evenue.value
+    })
+
+    addEvent.value = false
+  }
+
+  function resetForm() {
+    ename.value = ''
+    dateTime.value = ''
+    edesc.value = ''
+    etype.value = ''
+    evenue.value = ''
+  }
+
 </script>

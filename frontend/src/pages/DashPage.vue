@@ -132,7 +132,7 @@
       </div>
     </div>
 
-    <div class="q-pa-xs">
+    <div class="q-pa-xs"  v-if="isAdmin"> <!-- REPORT GENERATION SECTION -->
       <div class="col-12 col-sm-6 q-pa-xs">
         <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
           <div class="row items-center justify-between q-pa-sm" style="background: var(--q-primary); border-top-left-radius: 8px; border-top-right-radius: 8px;">
@@ -234,12 +234,13 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
-
-export default {
-  setup () {
     const selectedDate = ref('2025/11/25')
+    
+    defineProps({
+      isAdmin: Boolean
+    })
 
     const events = [
       { date: '2025/11/25', title: 'Faculty Meeting', description: 'Meeting with department heads.' },
@@ -379,12 +380,4 @@ const rows = [
     trainingsAttended: 2
   }
 ]
-
-
-    return {
-      selectedDate, events, tickets, documents, people,
-      type, choices, filter, columns, rows
-    }
-  }
-}
 </script>

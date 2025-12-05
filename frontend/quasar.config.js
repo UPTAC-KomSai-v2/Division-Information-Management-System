@@ -94,7 +94,9 @@ export default defineConfig(() => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: [
+        'Dialog'
+      ],
     },
 
     // animations: 'all', // --- includes all animations

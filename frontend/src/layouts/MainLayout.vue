@@ -56,7 +56,7 @@
             </q-avatar>
 
             <div class="text-subtitle1 q-my-sm"> {{ currentUserName }}</div>
-            <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/app/Profile')"/>
+            <q-btn class="full-width q-my-xs" color="primary" label="Profile" @click="$router.push('/app/profile')"/>
             <q-btn class="full-width q-my-xs" color="secondary" label="Logout" @click="logout"/>
           </div>
         </q-btn-dropdown>
@@ -72,7 +72,7 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view :is-admin="userAdmin" />
     </q-page-container>
 
   </q-layout>
@@ -102,7 +102,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
 
-//const userRole = ref('admin') // replace with auth logic
+localStorage.setItem('role', 'admin')
+const userRole = localStorage.getItem('role') || 'user'
+const userAdmin = userRole === 'admin'
 
 const messages = ref([
   {
