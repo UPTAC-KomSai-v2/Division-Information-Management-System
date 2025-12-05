@@ -177,13 +177,6 @@
                       label="Send on Enter (Shift+Enter for newline)"
                     />
                   </div>
-                  <div class="q-mt-sm">
-                    <q-toggle
-                      v-model="autoScroll"
-                      color="primary"
-                      label="Auto-scroll to newest messages"
-                    />
-                  </div>
                 </div>
 
                 <q-separator />
@@ -265,7 +258,6 @@ const searchInput = ref(null)
 const newChatDialog = ref(false)
 const newChatSearch = ref('')
 const enterToSend = ref(true)
-const autoScroll = ref(true)
 const draftMessage = ref('')
 const messages = ref([])
 const showSettings = ref(false)
@@ -524,7 +516,6 @@ const visibleMessages = computed(() =>
 
 // ⭐ Scroll function
 async function scrollToBottom() {
-  if (!autoScroll.value) return
   await nextTick()
   if (scrollArea.value) {
     const target = scrollArea.value.getScrollTarget()
