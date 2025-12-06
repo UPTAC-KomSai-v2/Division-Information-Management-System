@@ -90,6 +90,15 @@
             <div class="text-body1">Status: {{ selectedEvent.status }}</div>
             <div class="text-body1">Created By: {{ selectedEvent.creator }}</div>
             <p class="q-mt-sm">Description: {{ selectedEvent.description }}</p>
+            <div class="q-mt-md" v-if="isAdmin">
+              <q-btn
+                color="primary"
+                label="Resolve"
+                icon="check_circle"
+                flat
+                @click="resolveTicket"
+              />
+            </div>
           </div>
 
           <div v-else class="text-grey-6 text-caption">
@@ -113,6 +122,8 @@ const tktDesc = ref('')
 const tktPriority = ref('MEDIUM')
 const newTicket = ref(false)
 const loadingTickets = ref(false)
+const role = ref((localStorage.getItem('role') || '').toUpperCase())
+const isAdmin = computed(() => role.value === 'ADMIN')
 
 const tktPriorities = [
   { label: 'Low', value: 'LOW' },
@@ -180,5 +191,16 @@ function resetForm() {
   tktTitle.value = ''
   tktDesc.value = ''
   tktPriority.value = 'MEDIUM'
+}
+
+async function resolveTicket() {
+  if (!selectedEvent.value || !selectedEvent.value.id) return
+  try {
+    await api.delete(`/api/tickets/${selectedEvent.value.id}/`)
+    tickets.value = tickets.value.filter((t) => t.id !== selectedEvent.value.id)
+    selectedEvent.value = null
+  } catch (err) {
+    console.error('Failed to resolve ticket:', err)
+  }
 }
 </script>
