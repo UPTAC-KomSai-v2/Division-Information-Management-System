@@ -74,9 +74,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
-import { api } from 'boot/axios'
 
-localStorage.setItem('role', 'admin')
+localStorage.setItem('role', 'none')
 const userRole = localStorage.getItem('role') || 'user'
 const userAdmin = userRole === 'admin'
 
@@ -109,16 +108,6 @@ onMounted(() => {
 })
 
 function logout () {
-  const token = localStorage.getItem('access')
-  if (token) {
-    api.post('/api/presence/offline/', null, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).catch(() => {})
-  }
-
-  // notify any open pages (e.g., messages) to tear down websockets
-  window.dispatchEvent(new Event('app-logout'))
-
   // clear client auth data
   localStorage.removeItem('access')
   localStorage.removeItem('refresh')
