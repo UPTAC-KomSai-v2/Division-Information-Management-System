@@ -28,7 +28,15 @@
         <q-card-section>
           <q-input class="q-pa-sm" v-model="tktTitle" label="Title" outlined />
           <q-input class="q-pa-sm" v-model="tktDesc" label="Description" outlined />
-          <q-select class="q-pa-sm" v-model="tktPriority" :options="tktPriorities" label="Priority" outlined />
+          <q-select
+            class="q-pa-sm"
+            v-model="tktPriority"
+            :options="tktPriorities"
+            label="Priority"
+            outlined
+            emit-value
+            map-options
+          />
         </q-card-section>
 
         <q-card-actions align="right">
@@ -102,8 +110,9 @@ import { api } from 'boot/axios'
 /* --- FORM FIELDS --- */
 const tktTitle = ref('')
 const tktDesc = ref('')
-const tktPriority = ref('Medium')
+const tktPriority = ref('MEDIUM')
 const newTicket = ref(false)
+const loadingTickets = ref(false)
 
 const tktPriorities = [
   { label: 'Low', value: 'LOW' },
@@ -119,11 +128,15 @@ const search = ref('')
 
 /* Load tickets from backend */
 async function loadTickets() {
+  loadingTickets.value = true
   try {
     const response = await api.get('/api/tickets/')
-    tickets.value = response.data
+    const raw = response.data
+    tickets.value = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
   } catch (err) {
     console.error("Failed to load tickets:", err)
+  } finally {
+    loadingTickets.value = false
   }
 }
 
@@ -135,8 +148,8 @@ onMounted(() => {
 const filteredTickets = computed(() => {
   if (!search.value) return tickets.value
   return tickets.value.filter(t =>
-    t.title.toLowerCase().includes(search.value.toLowerCase()) ||
-    t.ticket_id.toLowerCase().includes(search.value.toLowerCase())
+    (t.title || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (t.ticket_id || '').toLowerCase().includes(search.value.toLowerCase())
   )
 })
 
@@ -151,7 +164,11 @@ async function submitTicket() {
 
     newTicket.value = false
     resetForm()
-    loadTickets()
+    await loadTickets()
+    // select the newest ticket if available
+    if (tickets.value.length) {
+      selectedEvent.value = tickets.value[0]
+    }
 
   } catch (err) {
     console.error("Failed to create ticket:", err)
@@ -161,6 +178,6 @@ async function submitTicket() {
 function resetForm() {
   tktTitle.value = ''
   tktDesc.value = ''
-  tktPriority.value = 'Medium'
+  tktPriority.value = 'MEDIUM'
 }
 </script>

@@ -7,7 +7,8 @@ class TicketSerializer(serializers.ModelSerializer):
     creator_email = serializers.EmailField(read_only=True)
     assignee = serializers.CharField(source='assigned_to.email', read_only=True, allow_null=True)
     assignee_email = serializers.EmailField(read_only=True, allow_null=True)
-    date = serializers.DateField(source='created_at', read_only=True)
+    # expose created_at as datetime to avoid DRF date coercion assertion
+    date = serializers.DateTimeField(source='created_at', read_only=True)
 
     class Meta:
         model = Ticket
@@ -34,7 +35,7 @@ class TicketSerializer(serializers.ModelSerializer):
 class TicketListSerializer(serializers.ModelSerializer):
     """Simplified serializer for list views"""
     creator = serializers.CharField(source='created_by.email', read_only=True)
-    date = serializers.DateField(source='created_at', read_only=True)
+    date = serializers.DateTimeField(source='created_at', read_only=True)
 
     class Meta:
         model = Ticket
