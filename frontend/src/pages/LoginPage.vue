@@ -115,6 +115,9 @@ const login = async () => {
       localStorage.setItem('user', JSON.stringify(response.data.user))
     }
 
+    // mark presence online (best effort)
+    api.post('/api/presence/online/').catch(() => {})
+
     router.push('/app/dashboard')
   } catch (err) {
     console.error('LOGIN ERROR:', err?.response?.status, err?.response?.data)
