@@ -99,18 +99,15 @@
           </div>
 
           <div class="q-pa-md full-height">
-            <div v-if="events.length > 0">
             <q-date
               v-model="selectedDate"
-              :events="events.map(e => e.date)"
+              :events="eventDates"
               event-color= "var(--q-accent)"
               minimal
               navigation-view="calendar"
               class="full-width"
             />
-          </div>
-          <!-- ❗ Fallback -->
-            <div v-else class="text-grey-6 text-caption q-pa-md flex flex-center">
+            <div v-if="!events.length" class="text-grey-6 text-caption q-pa-md flex flex-center">
               <q-icon name="info" size="sm" class="q-mr-sm" />
               No events available.
             </div>
@@ -263,7 +260,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { api } from 'boot/axios'
 
 defineProps({
@@ -272,6 +269,11 @@ defineProps({
 
 const events = ref([])
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
+const eventDates = computed(() =>
+  events.value
+    .map((e) => e.date || e.start_date || e.startDate || e.created_at?.slice(0, 10))
+    .filter(Boolean),
+)
 
 onMounted(() => {
   api.get("/api/events/")
