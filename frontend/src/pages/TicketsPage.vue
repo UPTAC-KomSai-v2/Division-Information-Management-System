@@ -120,7 +120,7 @@ const search = ref('')
 /* Load tickets from backend */
 async function loadTickets() {
   try {
-    const response = await api.get('http://localhost:8000/api/tickets/')
+    const response = await api.get('/api/tickets/')
     tickets.value = response.data
   } catch (err) {
     console.error("Failed to load tickets:", err)
@@ -143,7 +143,7 @@ const filteredTickets = computed(() => {
 /* --- CREATE NEW TICKET --- */
 async function submitTicket() {
   try {
-    await api.post('http://localhost:8000/api/tickets/', {
+    await api.post('/api/tickets/', {
       title: tktTitle.value,
       description: tktDesc.value,
       priority: tktPriority.value

@@ -118,12 +118,12 @@ async function submitDocument() {
   })
 
   try {
-    await api.post('http://localhost:8000/api/documents/', formData, { //replace with link to your backend endpoint
+    await api.post('/api/documents/', formData, { //replace with link to your backend endpoint
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     // Refresh table after upload
-    const response = await api.get('http://localhost:8000/api/documents/') //replace with link to your backend endpoint
+    const response = await api.get('/api/documents/') //replace with link to your backend endpoint
     rows.value = response.data
 
     uploadDoc.value = false
@@ -145,7 +145,7 @@ function resetForm() {
 const rows = ref([])
 
 onMounted(() => {
-  api.get('http://localhost:8000/api/documents/')
+  api.get('/api/documents/')
     .then(response => {
       rows.value = response.data
     })

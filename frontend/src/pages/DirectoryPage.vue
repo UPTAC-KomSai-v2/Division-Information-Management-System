@@ -113,7 +113,7 @@ const columns = [
 const rows = ref([])
 
 onMounted(() => {
-  api.get('http://localhost:8000/api/directory/')   // change to your actual endpoint
+  api.get('/api/directory/')   // change to your actual endpoint
     .then(res => rows.value = res.data)
     .catch(err => console.error(err))
 })
@@ -137,10 +137,10 @@ async function submitUser() {
       dept: dept.value
     }
 
-    await api.post("http://localhost:8000/api/directory/", payload)
+    await api.post("/api/directory/", payload)
 
     // refresh the table
-    const res = await api.get("http://localhost:8000/api/directory/")
+    const res = await api.get("/api/directory/")
     rows.value = res.data
 
     addUserDialog.value = false

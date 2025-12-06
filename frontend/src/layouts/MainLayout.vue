@@ -75,7 +75,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
 
-localStorage.setItem('role', 'admin')
+localStorage.setItem('role', 'none')
 const userRole = localStorage.getItem('role') || 'user'
 const userAdmin = userRole === 'admin'
 

@@ -139,7 +139,7 @@ const events = ref([])
 -------------------------- */
 async function loadEvents() {
   try {
-    const res = await api.get('http://localhost:8000/api/events/')
+    const res = await api.get('/api/events/')
     events.value = res.data
   } catch (e) {
     console.error("Failed to load events:", e)
@@ -177,7 +177,7 @@ function updateDateTime() {
 
 async function submitEvent() {
   try {
-    await api.post('http://localhost:8000/api/events/', {
+    await api.post('/api/events/', {
       title: ename.value,
       description: edesc.value,
       date: date.value,

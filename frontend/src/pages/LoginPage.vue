@@ -108,6 +108,13 @@ const login = async () => {
       user: response.data.user
     })
 
+    localStorage.setItem('access', response.data.access)
+    localStorage.setItem('refresh', response.data.refresh)
+
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+    }
+
     router.push('/app/dashboard')
   } catch (err) {
     console.error('LOGIN ERROR:', err?.response?.status, err?.response?.data)

@@ -274,7 +274,7 @@ const events = ref([])
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
 
 onMounted(() => {
-  api.get("http://localhost:8000/api/events/")
+  api.get("/api/events/")
     .then(res => {
       events.value = res.data.slice(0, 5)   // only display first 5 on dashboard
     })
@@ -287,7 +287,7 @@ onMounted(() => {
 const tickets = ref([])
 
 onMounted(() => {
-  api.get("http://localhost:8000/api/tickets/")
+  api.get("/api/tickets/")
     .then(res => {
       tickets.value = res.data
     })
@@ -300,7 +300,7 @@ onMounted(() => {
 const documents = ref([])
 
 onMounted(() => {
-  api.get('http://localhost:8000/api/documents/')
+  api.get('/api/documents/')
     .then(response => {
       documents.value = response.data
     })
@@ -313,7 +313,7 @@ onMounted(() => {
 const people = ref([])
 
 onMounted(() => {
-  api.get("http://localhost:8000/api/directory/")
+  api.get("/api/directory/")
     .then(res => people.value = res.data.slice(0, 5))
     .catch(err => console.error(err))
 })
