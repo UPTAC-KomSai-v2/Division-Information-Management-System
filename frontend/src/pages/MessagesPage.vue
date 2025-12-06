@@ -60,6 +60,19 @@
           <div class="col-4 col-md-3 bg-grey-2 column left-pane">
             <div class="q-pa-sm pane-controls">
               <div class="row items-center q-gutter-sm no-wrap">
+                <!-- Go back to home button (DIMS logo) -->
+                <q-btn
+                  flat
+                  round
+                  dense
+                  @click="goHome"
+                  class="go-home-btn dims-home-btn"
+                >
+                  <img src="~assets/dims.png" alt="DIMS logo" class="dims-logo" />
+                  <q-tooltip>Click to go back to home</q-tooltip>
+                </q-btn>
+
+                <!-- Resized search bar -->
                 <q-input
                   ref="searchInput"
                   v-model="search"
@@ -124,10 +137,6 @@
           <div class="col-8 col-md-9 conversation-panel">
             <!-- HEADER -->
             <div class="row items-center q-pa-md q-gutter-md header-bar">
-              <div class="header-logo" role="button" @click="goHome">
-                <img src="~assets/dims.png" alt="DIMS logo" />
-                <div class="header-logo__caption">Click to go back to home</div>
-              </div>
               <q-avatar size="56px">
                 <q-icon name="person" size="40px" />
               </q-avatar>
@@ -331,23 +340,7 @@ const $q = useQuasar()
 $q.screen.setSizes({ header: 0 })
 const router = useRouter()
 
-const resizeObserverErrorHandler = (event) => {
-  const message = event?.message || ''
-  if (
-    message.includes('ResizeObserver loop completed') ||
-    message.includes('ResizeObserver loop limit exceeded')
-  ) {
-    event.preventDefault()
-    event.stopImmediatePropagation()
-  }
-}
-
-const goHome = () => {
-  // Avoid redundant navigation that can trigger ResizeObserver warnings
-  if (router.currentRoute.value.path !== '/app/dashboard') {
-    router.push('/app/dashboard')
-  }
-}
+const goHome = () => router.push('/app/dashboard')
 
 const selfContact = computed(() => {
   if (!currentUserId.value) return null
@@ -881,13 +874,11 @@ onBeforeUnmount(() => {
   closeSocket()
   document.body.classList.remove('messages-page-hide-header')
   window.removeEventListener('app-logout', handleAppLogout)
-  window.removeEventListener('error', resizeObserverErrorHandler)
 })
 
 onMounted(async () => {
   document.body.classList.add('messages-page-hide-header')
   window.addEventListener('app-logout', handleAppLogout)
-  window.addEventListener('error', resizeObserverErrorHandler)
   try {
     const storedNicknames = JSON.parse(localStorage.getItem(nicknamesKey) || '{}')
     if (storedNicknames && typeof storedNicknames === 'object') {
@@ -1190,5 +1181,27 @@ watch(
 .input-bar .q-input textarea {
   padding: 4px !important;
   line-height: 1.2 !important;
+}
+
+/* New: left panel controls */
+.go-home-btn {
+  flex-shrink: 0;
+}
+
+.dims-home-btn {
+  padding: 0;
+}
+
+.dims-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: block;
+}
+
+.search-input {
+  flex: 1;
+  max-width: 220px; /* adjust for wider/narrower search bar */
+  min-width: 0;
 }
 </style>
