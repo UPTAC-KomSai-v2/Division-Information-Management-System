@@ -34,12 +34,13 @@
                         @update:model-value="updateDateTime"/>
                 <q-time class="q-mt-md" v-model="time" format24h
                         @update:model-value="updateDateTime"/>
+                <q-time class="q-mt-md" v-model="endTime" format24h
+                        @update:model-value="updateDateTime"/>
               </q-popup-proxy>
             </q-input>
           </div>
 
           <q-input class="q-pa-sm" v-model="edesc" label="Event Description" outlined />
-          <q-input class="q-pa-sm" v-model="etype" label="Event Type" outlined />
           <q-input class="q-pa-sm" v-model="evenue" label="Event Venue" outlined />
         </q-card-section>
 
@@ -103,7 +104,6 @@
 
           <div v-if="selectedEvent">
             <div class="text-h6 text-weight-bold">{{ selectedEvent.title }}</div>
-            <div class="text-body1">Type: {{ selectedEvent.type }}</div>
             <div class="text-body1">Venue: {{ selectedEvent.venue }}</div>
             <p class="q-mt-sm">{{ selectedEvent.description }}</p>
           </div>
@@ -162,8 +162,8 @@ const addEvent = ref(false)
 const ename = ref('')
 const dateTime = ref('')
 const edesc = ref('')
-const etype = ref('')
 const evenue = ref('')
+const endTime = ref('')
 
 const showPicker = ref(false)
 const date = ref('')
@@ -181,8 +181,8 @@ async function submitEvent() {
       title: ename.value,
       description: edesc.value,
       date: date.value,
-      time: time.value,
-      type: etype.value,
+      start_time: time.value,
+      end_time: endTime.value,
       venue: evenue.value
     })
 
@@ -199,9 +199,9 @@ function resetForm() {
   ename.value = ''
   dateTime.value = ''
   edesc.value = ''
-  etype.value = ''
   evenue.value = ''
   date.value = ''
   time.value = ''
+  endTime.value = ''
 }
 </script>
