@@ -130,24 +130,47 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from 'src/stores/auth'
 
-/* Replace this with real user data from backend or session */
+const authStore = useAuthStore()
+
 const form = ref({
-  avatar: 'https://cdn.quasar.dev/img/boy-avatar.png',
-  name: 'Juan Dela Cruz',
-  email: 'juan.delacruz@example.com',
-  role: 'Faculty',
-  position: 'Instructor',
-  unit: 'Math Department',
-  contact: '09123456789',
-  notifyAnnouncements: true,
-  notifyTickets: true
+  avatar: '',
+  name: '',
+  email: '',
+  role: '',
+  position: '',
+  unit: '',
+  contact: '',
+  notifyAnnouncements: false,
+  notifyTickets: false
+})
+
+onMounted(() => {
+  // Load from Pinia store if available
+  let user = authStore.user
+
+  // Fallback to localStorage
+  if (!user) {
+    const saved = localStorage.getItem('user')
+    if (saved) user = JSON.parse(saved)
+  }
+
+  if (!user) return
+
+  // Map Django fields to your form fields
+  form.value.avatar =
+  user.avatar
+    ? (user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_API_URL}${user.avatar}`)
+    : 'https://cdn.quasar.dev/img/boy-avatar.png'
+  form.value.unit = user.department ?? 'Not specified'
+  form.value.contact = user.phone ?? 'Not provided'
+  form.value.name = user.full_name ?? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+  form.value.email = user.email
+  form.value.role = user.role
+  form.value.position = user.position || user.role   // If you have no position field, fallback
+  form.value.notifyAnnouncements = user.notifyAnnouncements ?? false
+  form.value.notifyTickets = user.notifyTickets ?? false
 })
 </script>
-
-<style scoped>
-.hidden {
-  display: none;
-}
-</style>

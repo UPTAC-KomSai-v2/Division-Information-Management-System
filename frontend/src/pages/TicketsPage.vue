@@ -80,7 +80,7 @@
             <div class="text-subtitle1 text-weight-bold">Title: {{ selectedEvent.title }}</div>
             <div class="text-body1">Priority: {{ selectedEvent.priority }}</div>
             <div class="text-body1">Status: {{ selectedEvent.status }}</div>
-            <div class="text-body1">Created By: {{ selectedEvent.creator_email }}</div>
+            <div class="text-body1">Created By: {{ selectedEvent.creator }}</div>
             <p class="q-mt-sm">Description: {{ selectedEvent.description }}</p>
           </div>
 

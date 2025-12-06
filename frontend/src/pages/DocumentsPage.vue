@@ -11,11 +11,11 @@
 
       <!-- Only admin can create announcements -->
       <div class="q-mx-md q-mb-md flex flex-center" v-if="isAdmin">
-        <q-btn class="bg-primary text-white" icon="add" @click="openUploadDialog('document')">
+        <q-btn class="bg-primary text-white q-ma-sm" icon="add" @click="openUploadDialog('document')">
           Upload File
         </q-btn>
 
-        <q-btn class="bg-secondary text-white q-ml-sm" icon="campaign" @click="openUploadDialog('announcement')">
+        <q-btn class="bg-secondary text-white q-ma-sm" icon="campaign" @click="openUploadDialog('announcement')">
           New Announcement
         </q-btn>
       </div>
