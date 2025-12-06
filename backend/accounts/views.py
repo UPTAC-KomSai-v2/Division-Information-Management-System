@@ -21,13 +21,12 @@ class IsDivisionAdmin(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == User.Role.DIVISION_ADMIN
+        return (
+            request.user.is_authenticated 
+            and request.user.role 
+            and request.user.role.name == "ADMIN"
         )
-
-
+    
 class AdminOnlyView(generics.GenericAPIView):
     """
     Example view just to test admin-only access.
