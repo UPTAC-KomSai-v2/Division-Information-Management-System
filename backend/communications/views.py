@@ -10,7 +10,8 @@ from .models import (
     Memo,
     Circular,
     CommunicationDocument,
-    CommunicationEvent
+    CommunicationEvent,
+    ChatMessage
 )
 from .serializers import (
     CommunicationSerializer,
@@ -22,6 +23,7 @@ from .serializers import (
     CommunicationEventSerializer
 )
 from accounts.models import User
+from rest_framework.views import APIView
 
 
 class CommunicationPermission(permissions.BasePermission):
@@ -161,4 +163,32 @@ class CommunicationViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(communication)
         return Response(serializer.data)
+
+
+def _user_in_room(room_key: str, user_id: int) -> bool:
+    """Check if a user id is one of the participants encoded in room_key."""
+    try:
+        parts = room_key.split("_")
+        participants = {int(p) for p in parts}
+        return user_id in participants
+    except Exception:
+        return False
+
+
+class ChatHistoryView(APIView):
+    """
+    Delete chat history for a given conversation room.
+    Only participants in the room can delete.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, room):
+        if not _user_in_room(room, request.user.id):
+            return Response(
+                {"detail": "Not permitted to delete this conversation."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        deleted_count, _ = ChatMessage.objects.filter(conversation_id=room).delete()
+        return Response({"deleted": deleted_count})
 

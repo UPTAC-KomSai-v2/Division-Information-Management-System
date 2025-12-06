@@ -216,8 +216,11 @@
                         class="message-item q-pa-md q-mb-md"
                         :class="msg.senderId === currentUserId ? 'msg-self' : 'msg-other'"
                       >
-                        <div class="text-subtitle2 text-weight-bold">
-                          {{ msg.senderId === currentUserId ? 'You' : msg.senderName }}
+                        <div
+                          v-if="msg.senderId !== currentUserId"
+                          class="text-subtitle2 text-weight-bold"
+                        >
+                          {{ msg.senderName }}
                         </div>
 
                         <div class="q-mt-sm text-body1">{{ msg.text }}</div>
@@ -251,7 +254,28 @@
                   placeholder="Write a message"
                   @keydown.enter="handleEnterKey"
                 />
-                <q-btn flat round dense icon="mood" />
+                <q-btn-dropdown
+                  flat
+                  round
+                  dense
+                  icon="mood"
+                  v-model="emojiMenu"
+                  persistent
+                  dropdown-icon="expand_more"
+                  no-icon-animation
+                  auto-close
+                >
+                  <q-list dense style="min-width: 160px">
+                    <q-item
+                      v-for="em in emojis"
+                      :key="em"
+                      clickable
+                      @click="insertEmoji(em)"
+                    >
+                      <q-item-section>{{ em }}</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-btn-dropdown>
                 <q-btn flat round dense icon="send" color="primary" @click="sendMessage" />
               </div>
             </template>
@@ -265,6 +289,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from 'boot/axios'
 
 const search = ref('')
 const searchInput = ref(null)
@@ -273,6 +298,19 @@ const newChatSearch = ref('')
 const enterToSend = ref(true)
 const draftMessage = ref('')
 const messages = ref([])
+const emojiMenu = ref(false)
+const emojis = [
+  '\u{1F600}', // ??
+  '\u{1F602}', // ??
+  '\u{1F604}', // ??
+  '\u{1F60A}', // ??
+  '\u{1F60D}', // ??
+  '\u{1F601}', // ??
+  '\u{1F44D}', // ??
+  '\u{1F64F}', // ??
+  '\u{1F389}', // ??
+  '\u2764\uFE0F', // ??
+]
 const showSettings = ref(false)
 const directory = ref([])
 const selectedContact = ref(null)
@@ -519,8 +557,13 @@ function startNewChat() {
 function deleteContact() {
   if (!selectedContact.value) return
   const id = selectedContact.value.id
+  const roomKey = `${Math.min(currentUserId.value, id)}_${Math.max(currentUserId.value, id)}`
+
+  // best-effort delete on server; ignore errors for now
+  api.delete(`/api/chat/${roomKey}/delete/`).catch(() => {})
+
   messages.value = messages.value.filter((m) => m.contactId !== id)
-  directory.value = directory.value.filter((d) => d.id !== id)
+  // Keep directory entry to preserve display name; just clear chat records
   removeChattedContact(id)
   selectedContact.value = null
 }
@@ -703,6 +746,11 @@ function handleEnterKey(evt) {
   if (evt && evt.shiftKey) return
   if (evt) evt.preventDefault()
   sendMessage()
+}
+
+function insertEmoji(em) {
+  draftMessage.value = `${draftMessage.value || ''}${em}`
+  emojiMenu.value = false
 }
 
 function closeSocket() {
