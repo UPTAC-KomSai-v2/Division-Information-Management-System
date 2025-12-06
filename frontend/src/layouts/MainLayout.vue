@@ -40,12 +40,12 @@
     <q-drawer class="bg-primary text-white" v-model="leftDrawerOpen" side="left" behavior="desktop" overlay bordered >
       <q-list>
         <q-item-label class="text-accent" header> Quick Links</q-item-label>
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
+        <EssentialLink v-for="link in filteredLinks" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
-    <q-page-container>
-      <router-view :is-admin="userAdmin" />
+<q-page-container>
+      <router-view :is-admin="isAdmin" :user-role="role" />
     </q-page-container>
 
   </q-layout>
@@ -73,24 +73,29 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from 'boot/axios'
 import EssentialLink from 'components/EssentialLink.vue'
 
-localStorage.setItem('role', 'none')
-const userRole = localStorage.getItem('role') || 'user'
-const userAdmin = userRole === 'admin'
-
 const messages = ref([])
-
 const router = useRouter()
 
-const unreadCount = computed(() => messages.value.filter(m => m.unread).length)
+// Normalize role string; fallback to STAFF so basic links remain usable
+const role = ref((localStorage.getItem('role') || 'STAFF').toUpperCase())
+const isAdmin = computed(() => role.value === 'ADMIN')
 
+const unreadCount = computed(() => messages.value.filter((m) => m.unread).length)
+
+// Link definitions with allowedRoles for simple role-based filtering
 const linksList = [
-  {title: 'Calendar', icon: 'calendar_today', to: '/app/calendar'},
-  {title: 'Directory', icon: 'contacts', to: '/app/directory'},
-  {title: 'Documents Repository', icon: 'library_books', to: '/app/documents'},
-  {title: 'Services Center', icon: 'build', to: '/app/services',},
+  { title: 'Calendar', icon: 'calendar_today', to: '/app/calendar', allowedRoles: ['ADMIN', 'STAFF', 'FACULTY'] },
+  { title: 'Directory', icon: 'contacts', to: '/app/directory', allowedRoles: ['ADMIN', 'STAFF'] },
+  { title: 'Documents Repository', icon: 'library_books', to: '/app/documents', allowedRoles: ['ADMIN', 'STAFF', 'FACULTY'] },
+  { title: 'Services Center', icon: 'build', to: '/app/services', allowedRoles: ['ADMIN', 'STAFF'] },
 ]
+
+const filteredLinks = computed(() =>
+  linksList.filter((link) => !link.allowedRoles || link.allowedRoles.includes(role.value)),
+)
 
 const leftDrawerOpen = ref(false)
 const currentUserName = ref('User')
@@ -99,19 +104,58 @@ function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 
-// read username from localStorage when layout loads
+function deriveDisplayName(payload) {
+  if (!payload) return null
+  const first = (payload.first_name || '').trim()
+  const last = (payload.last_name || '').trim()
+  if (first || last) return `${first} ${last}`.trim()
+  if (payload.name) return String(payload.name).trim()
+  if (payload.username) return String(payload.username).trim()
+  const email = (payload.email || '').trim()
+  if (email && email.includes('@')) return email.split('@')[0]
+  return email || null
+}
+
+// read username/role from localStorage when layout loads
 onMounted(() => {
   const storedName = localStorage.getItem('username')
   if (storedName) {
     currentUserName.value = storedName
   }
+  const storedRole = localStorage.getItem('role')
+  if (storedRole) {
+    role.value = storedRole.toUpperCase()
+  }
+
+  // attempt to refresh user info from backend
+  const token = localStorage.getItem('access')
+  if (token) {
+    api
+      .get('/api/auth/me/', { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        const data = res.data || {}
+        const displayName = deriveDisplayName(data)
+        currentUserName.value = displayName || currentUserName.value
+        if (data.role) {
+          role.value = String(data.role).toUpperCase()
+          localStorage.setItem('role', role.value)
+        }
+        if (displayName) {
+          localStorage.setItem('username', displayName)
+        }
+      })
+      .catch(() => {
+        // ignore; fall back to stored values
+      })
+  }
 })
 
-function logout () {
+function logout() {
   // clear client auth data
   localStorage.removeItem('access')
   localStorage.removeItem('refresh')
   localStorage.removeItem('username')
+  localStorage.removeItem('role')
 
   router.push('/login')
 }
