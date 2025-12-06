@@ -9,13 +9,18 @@
         </div>
       </div>
 
-      <!-- Only admin can create announcements -->
-      <div class="q-mx-md q-mb-md flex flex-center" v-if="isAdmin">
+      <!-- Upload documents: all users; announcements: admin only -->
+      <div class="q-mx-md q-mb-md flex flex-center">
         <q-btn class="bg-primary text-white q-ma-sm" icon="add" @click="openUploadDialog('document')">
           Upload File
         </q-btn>
 
-        <q-btn class="bg-secondary text-white q-ma-sm" icon="campaign" @click="openUploadDialog('announcement')">
+        <q-btn
+          v-if="isAdmin"
+          class="bg-secondary text-white q-ma-sm"
+          icon="campaign"
+          @click="openUploadDialog('announcement')"
+        >
           New Announcement
         </q-btn>
       </div>
@@ -33,12 +38,13 @@
         <q-card-section>
           <q-input class="q-my-sm" v-model="title" label="Title" outlined />
           <q-input
-            v-if="uploadType === 'announcement'"
             class="q-my-sm"
             v-model="description"
             label="Description"
             type="textarea"
             outlined
+            autogrow
+            maxlength="500"
           />
           <q-uploader
             class="q-ma-sm full-width"
@@ -70,10 +76,10 @@
       <q-separator />
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="announcements">
-          <q-table title="Announcements" :rows="rows" :columns="columns" row-key="id" :filter="filter" flat>
+          <q-table title="Announcements" :rows="memos" :columns="columns" row-key="id" :filter="filterMemos" flat>
             <!-- SEARCH -->
             <template v-slot:top-right>
-              <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
+              <q-input borderless dense debounce="300" v-model="filterMemos" placeholder="Search">
                 <template #append>
                   <q-icon name="search" />
                 </template>
@@ -89,6 +95,12 @@
               </q-td>
             </template>
 
+            <template v-slot:body-cell-description="props">
+              <q-td>
+                <div class="ellipsis">{{ props.row.description }}</div>
+              </q-td>
+            </template>
+
             <!-- DATE CELL -->
             <template v-slot:body-cell-date="props">
               <q-td>
@@ -98,29 +110,36 @@
 
             <!-- ACTIONS CELL -->
             <template v-slot:body-cell-actions="props">
-              <q-td>
-                <q-btn flat round icon="download" color="primary" @click="downloadFile(props.row)" />
+              <q-td class="text-center">
+                <q-btn
+                  flat
+                  round
+                  icon="download"
+                  color="primary"
+                  :disable="!props.row.file_url"
+                  @click="downloadFile(props.row)"
+                />
 
                 <q-btn
-                  v-if="isAdmin || props.row.type === 'document'"
+                  v-if="isAdmin"
                   flat round icon="edit" color="green"
-                  @click="editFile(props.row)"
+                  @click="editMemo(props.row)"
                 />
 
                 <q-btn
                   v-if="isAdmin"
                   flat round icon="delete" color="red"
-                  @click="deleteFile(props.row)"
+                  @click="deleteMemo(props.row)"
                 />
               </q-td>
             </template>
           </q-table>
         </q-tab-panel>
         <q-tab-panel name="documents">
-          <q-table title="Documents" :rows="rows" :columns="columns" row-key="id" :filter="filter" flat>
+          <q-table title="Documents" :rows="documents" :columns="columns" row-key="id" :filter="filterDocuments" flat>
             <!-- SEARCH -->
             <template v-slot:top-right>
-              <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
+              <q-input borderless dense debounce="300" v-model="filterDocuments" placeholder="Search">
                 <template #append>
                   <q-icon name="search" />
                 </template>
@@ -136,6 +155,12 @@
               </q-td>
             </template>
 
+            <template v-slot:body-cell-description="props">
+              <q-td>
+                <div class="ellipsis">{{ props.row.description }}</div>
+              </q-td>
+            </template>
+
             <!-- DATE CELL -->
             <template v-slot:body-cell-date="props">
               <q-td>
@@ -145,19 +170,26 @@
 
             <!-- ACTIONS CELL -->
             <template v-slot:body-cell-actions="props">
-              <q-td>
-                <q-btn flat round icon="download" color="primary" @click="downloadFile(props.row)" />
+              <q-td class="text-center">
+                <q-btn
+                  flat
+                  round
+                  icon="download"
+                  color="primary"
+                  :disable="!props.row.file_url"
+                  @click="downloadFile(props.row)"
+                />
 
                 <q-btn
-                  v-if="isAdmin || props.row.type === 'document'"
+                  v-if="isAdmin"
                   flat round icon="edit" color="green"
-                  @click="editFile(props.row)"
+                  @click="editDocument(props.row)"
                 />
 
                 <q-btn
                   v-if="isAdmin"
                   flat round icon="delete" color="red"
-                  @click="deleteFile(props.row)"
+                  @click="deleteDocument(props.row)"
                 />
               </q-td>
             </template>
@@ -193,13 +225,16 @@ import { api } from "boot/axios"
 defineProps({ isAdmin: Boolean })
 
 /* --------------------------- TABLE SETUP --------------------------- */
-const filter = ref("")
-const rows = ref([])
+const filterDocuments = ref("")
+const filterMemos = ref("")
+const documents = ref([])
+const memos = ref([])
 
 const columns = [
   { name: "title", label: "Title", field: "name", align: "left", sortable: true },
+  { name: "description", label: "Description", field: "description", align: "left" },
   { name: "date", label: "Date Uploaded", field: "created_at", align: "left", sortable: true },
-  { name: "actions", label: "Actions", field: "actions", align: "right" }
+  { name: "actions", label: "Actions", field: "actions", align: "center", headerClasses: 'text-center' }
 ]
 
 /* --------------------------- UPLOAD --------------------------- */
@@ -228,21 +263,35 @@ function storeFile(files) {
 }
 
 async function submitFile() {
-  const form = new FormData()
-
-  form.append("title", title.value)
-  form.append("file", uploader.value.files[0])
-
-  if (uploadType.value === "announcement") {
-    form.append("description", description.value)
-    form.append("type", "announcement")
-  } else {
-    form.append("type", "document")
-  }
-
   try {
-    await api.post("/api/files/", form)
-    loadFiles()
+    if (uploadType.value === "announcement") {
+      const form = new FormData()
+      const fileEntry = uploader.value?.files?.[0]
+      const nativeFile = fileEntry?.__nativeFile || fileEntry
+      form.append("title", title.value)
+      form.append("description", description.value)
+      if (nativeFile) {
+        form.append("file", nativeFile, nativeFile.name)
+      }
+      await api.post("/api/memos/", form)
+      await loadMemos()
+    } else {
+      const form = new FormData()
+      const fileEntry = uploader.value?.files?.[0]
+      const nativeFile = fileEntry?.__nativeFile || fileEntry
+      if (!nativeFile) {
+        console.error("UPLOAD ERROR: No file selected")
+        return
+      }
+      form.append("name", title.value)
+      form.append("file", nativeFile, nativeFile.name)
+      if (description.value) {
+        form.append("description", description.value)
+      }
+
+      await api.post("/api/documents/", form)
+      await loadDocuments()
+    }
     uploadDialog.value = false
     resetForm()
   } catch (err) {
@@ -258,32 +307,97 @@ function openDetails(row) {
 
 /* --------------------------- ACTIONS --------------------------- */
 function downloadFile(row) {
+  if (!row?.file_url) {
+    // no attachment available for this item
+    return
+  }
   window.open(row.file_url, "_blank")
 }
 
-function editFile(row) {
-  console.log("Edit:", row)
-}
-
-function deleteFile(row) {
-  console.log("Delete:", row)
-}
-
 /* --------------------------- LOAD --------------------------- */
-async function loadFiles() {
+async function loadDocuments() {
   try {
     const res = await api.get("/api/documents/")
     const raw = res.data
-    rows.value = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
+    documents.value = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
   } catch (err) {
-    console.error("LOAD ERROR:", err)
+    console.error("LOAD DOCUMENTS ERROR:", err)
   }
 }
 
-onMounted(() => loadFiles())
+async function loadMemos() {
+  try {
+    const res = await api.get("/api/memos/")
+    const raw = res.data
+    memos.value = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
+  } catch (err) {
+    console.error("LOAD MEMOS ERROR:", err)
+  }
+}
+
+onMounted(() => {
+  loadDocuments()
+  loadMemos()
+})
 
 /* --------------------------- HELPERS --------------------------- */
 function formatDate(date) {
+  if (!date) return ''
   return new Date(date).toLocaleDateString()
+}
+
+/* --------------------------- EDIT/DELETE HELPERS --------------------------- */
+async function deleteDocument(row) {
+  if (!row?.id) return
+  try {
+    await api.delete(`/api/documents/${row.id}/`)
+    await loadDocuments()
+  } catch (err) {
+    console.error("DELETE DOCUMENT ERROR:", err)
+  }
+}
+
+async function deleteMemo(row) {
+  if (!row?.id) return
+  try {
+    await api.delete(`/api/memos/${row.id}/`)
+    await loadMemos()
+  } catch (err) {
+    console.error("DELETE MEMO ERROR:", err)
+  }
+}
+
+async function editDocument(row) {
+  if (!row?.id) return
+  const newTitle = window.prompt("Edit title:", row.name || row.title || "")
+  if (newTitle === null) return
+  const newDesc = window.prompt("Edit description:", row.description || "")
+  if (newDesc === null) return
+  try {
+    await api.patch(`/api/documents/${row.id}/`, {
+      name: newTitle || row.name,
+      description: newDesc,
+    })
+    await loadDocuments()
+  } catch (err) {
+    console.error("EDIT DOCUMENT ERROR:", err)
+  }
+}
+
+async function editMemo(row) {
+  if (!row?.id) return
+  const newTitle = window.prompt("Edit title:", row.title || "")
+  if (newTitle === null) return
+  const newDesc = window.prompt("Edit description:", row.description || "")
+  if (newDesc === null) return
+  try {
+    await api.patch(`/api/memos/${row.id}/`, {
+      title: newTitle || row.title,
+      description: newDesc,
+    })
+    await loadMemos()
+  } catch (err) {
+    console.error("EDIT MEMO ERROR:", err)
+  }
 }
 </script>

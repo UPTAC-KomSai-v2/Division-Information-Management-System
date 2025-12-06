@@ -8,6 +8,8 @@ class MemoSerializer(serializers.ModelSerializer):
     created_by_email = serializers.EmailField(source='created_by.email', read_only=True)
     created_by_name = serializers.SerializerMethodField()
     is_published = serializers.BooleanField(read_only=True)
+    file_url = serializers.SerializerMethodField()
+    file_name = serializers.CharField(source='file.name', read_only=True)
     
     class Meta:
         model = Memo
@@ -16,6 +18,9 @@ class MemoSerializer(serializers.ModelSerializer):
             'memo_id',
             'title',
             'description',
+            'file',
+            'file_url',
+            'file_name',
             'created_by',
             'created_by_email',
             'created_by_name',
@@ -36,6 +41,15 @@ class MemoSerializer(serializers.ModelSerializer):
             return full_name if full_name else obj.created_by.email
         return None
     
+    def get_file_url(self, obj):
+        """Return absolute URL for attached file if present"""
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+    
     def create(self, validated_data):
         """Override create to set created_by from request user"""
         validated_data['created_by'] = self.context['request'].user
@@ -45,6 +59,8 @@ class MemoSerializer(serializers.ModelSerializer):
 class MemoListSerializer(serializers.ModelSerializer):
     """Simplified serializer for memo list views"""
     created_by_email = serializers.EmailField(source='created_by.email', read_only=True)
+    file_url = serializers.SerializerMethodField()
+    file_name = serializers.CharField(source='file.name', read_only=True)
     
     class Meta:
         model = Memo
@@ -53,10 +69,20 @@ class MemoListSerializer(serializers.ModelSerializer):
             'memo_id',
             'title',
             'description',
+            'file_url',
+            'file_name',
             'created_by_email',
             'created_at',
             'published_at',
             'target_department',
             'reqs_ack',
         ]
+    
+    def get_file_url(self, obj):
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
 

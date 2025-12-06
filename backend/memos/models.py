@@ -2,7 +2,12 @@ from django.db import models
 from django.conf import settings
 from django.db.models import Max
 from django.utils import timezone
+import os
 
+def memo_upload_path(instance, filename):
+    """Store memo attachments under media/memos/{user_id}/{filename}"""
+    user_id = instance.created_by.id if instance and instance.created_by_id else 'anonymous'
+    return os.path.join('memos', str(user_id), filename)
 
 class Memo(models.Model):
     """Memo model for internal communications"""
@@ -10,6 +15,7 @@ class Memo(models.Model):
     memo_id = models.CharField(max_length=20, unique=True, editable=False, verbose_name="Memo ID")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to=memo_upload_path, blank=True, null=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
