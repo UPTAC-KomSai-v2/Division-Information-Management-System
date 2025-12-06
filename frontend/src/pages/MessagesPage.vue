@@ -76,7 +76,6 @@
 
                 <q-btn flat round dense icon="settings" color="grey-8" @click="toggleSettings" />
               </div>
-
             </div>
 
             <q-scroll-area class="contacts-list">
@@ -97,7 +96,10 @@
                   <q-item
                     clickable
                     @click="selectContact(item)"
-                    :class="['contact-item', { 'bg-grey-3': selectedContact && selectedContact.id === item.id }]"
+                    :class="[
+                      'contact-item',
+                      { 'bg-grey-3': selectedContact && selectedContact.id === item.id },
+                    ]"
                   >
                     <q-item-section avatar>
                       <q-avatar color="grey-4" text-color="grey-9">
@@ -122,6 +124,10 @@
           <div class="col-8 col-md-9 conversation-panel">
             <!-- HEADER -->
             <div class="row items-center q-pa-md q-gutter-md header-bar">
+              <div class="header-logo" role="button" @click="goHome">
+                <img src="~assets/dims.png" alt="DIMS logo" />
+                <div class="header-logo__caption">Click to go back to home</div>
+              </div>
               <q-avatar size="56px">
                 <q-icon name="person" size="40px" />
               </q-avatar>
@@ -167,9 +173,7 @@
               <div class="column q-gutter-md">
                 <div class="column">
                   <div class="text-subtitle1 text-weight-bold">Messaging</div>
-                  <div class="text-body2 text-grey-7">
-                    Choose how you send and view messages.
-                  </div>
+                  <div class="text-body2 text-grey-7">Choose how you send and view messages.</div>
                   <div class="q-mt-sm">
                     <q-toggle
                       v-model="enterToSend"
@@ -187,7 +191,13 @@
                     Start a conversation with anyone in your directory.
                   </div>
                   <div class="q-mt-sm">
-                    <q-btn color="primary" outline icon="add" label="Create New Chat" @click="startNewChat" />
+                    <q-btn
+                      color="primary"
+                      outline
+                      icon="add"
+                      label="Create New Chat"
+                      @click="startNewChat"
+                    />
                   </div>
                 </div>
               </div>
@@ -197,7 +207,7 @@
             <template v-else>
               <div class="conversation-body">
                 <!--  SCROLL AREA FIXED HERE  -->
-                <q-scroll-area ref="scrollArea" class="message-scroll fit">
+                <q-scroll-area ref="scrollArea" class="message-scroll">
                   <div class="q-pa-sm column message-list">
                     <template v-if="visibleMessages.length">
                       <div
@@ -220,7 +230,9 @@
                           {{ selectedContact ? emptyState.title : 'No chat selected' }}
                         </div>
                         <div class="text-body2 text-grey-7 q-mt-xs">
-                          {{ selectedContact ? emptyState.subtitle : 'Choose a contact from the left' }}
+                          {{
+                            selectedContact ? emptyState.subtitle : 'Choose a contact from the left'
+                          }}
                         </div>
                       </div>
                     </template>
@@ -252,6 +264,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 
 const search = ref('')
 const searchInput = ref(null)
@@ -274,6 +287,12 @@ const nicknamesStore = ref({})
 const messageIds = ref(new Set())
 const backgroundSockets = ref(new Map())
 const historyPollHandle = ref(null)
+import { useQuasar } from 'quasar'
+const $q = useQuasar()
+$q.screen.setSizes({ header: 0 })
+const router = useRouter()
+
+const goHome = () => router.push('/app/dashboard')
 
 const selfContact = computed(() => {
   if (!currentUserId.value) return null
@@ -531,8 +550,8 @@ function changeNickname() {
     m.contactId === selectedContact.value.id
       ? { ...m, senderName: name }
       : m.senderId === selectedContact.value.id
-      ? { ...m, senderName: name }
-      : m,
+        ? { ...m, senderName: name }
+        : m,
   )
 }
 
@@ -554,8 +573,8 @@ function removeNickname() {
     m.contactId === selectedContact.value.id
       ? { ...m, senderName: baseName }
       : m.senderId === selectedContact.value.id
-      ? { ...m, senderName: baseName }
-      : m,
+        ? { ...m, senderName: baseName }
+        : m,
   )
 }
 
@@ -638,7 +657,10 @@ const filteredNewChat = computed(() => {
 const emptyState = computed(() =>
   selectedContact.value
     ? selectedContact.value.id === currentUserId.value
-      ? { title: 'Personal space', subtitle: 'Save draft messages, links, notes etc. to access later' }
+      ? {
+          title: 'Personal space',
+          subtitle: 'Save draft messages, links, notes etc. to access later',
+        }
       : { title: 'No messages yet', subtitle: 'Start the conversation' }
     : { title: 'No chat selected', subtitle: 'Choose a contact from the left' },
 )
@@ -728,9 +750,11 @@ watch(
 onBeforeUnmount(() => {
   stopHistoryPolling()
   closeSocket()
+  document.body.classList.remove('messages-page-hide-header')
 })
 
 onMounted(async () => {
+  document.body.classList.add('messages-page-hide-header')
   try {
     const storedNicknames = JSON.parse(localStorage.getItem(nicknamesKey) || '{}')
     if (storedNicknames && typeof storedNicknames === 'object') {
@@ -754,11 +778,7 @@ onMounted(async () => {
     headers: { Authorization: `Bearer ${token}` },
   })
   const raw = await usersRes.json()
-  const users = Array.isArray(raw)
-    ? raw
-    : Array.isArray(raw?.results)
-    ? raw.results
-    : []
+  const users = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
   directory.value = users.map((u) => {
     const baseName = deriveBaseName({ ...u, id: u.id })
     return {
@@ -855,21 +875,66 @@ watch(
 </script>
 
 <style scoped>
-.messages-root {
+/* Reset full height for Quasar app */
+:global(html, body, #q-app) {
   height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Make layout fill height */
+:deep(.q-layout) {
+  height: 100%;
+}
+
+/* QPageContainer must sit under header */
+:deep(.q-page-container) {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 0 !important;
+}
+
+/* QPage must allow children to flex */
+:deep(.q-page) {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+:deep(.q-header) {
+  display: none !important;
+}
+
+:global(body.messages-page-hide-header .q-header) {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
+:global(body.messages-page-hide-header .q-page-container) {
+  padding-top: 0 !important;
+}
+
+/* ROOT container */
+.messages-root {
+  flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
+/* MAIN 2-COLUMN LAYOUT */
 .messages-row {
   flex: 1;
   min-height: 0;
+  display: flex;
 }
 
+/* LEFT SIDEBAR */
 .left-pane {
   display: flex;
   flex-direction: column;
-  flex: 0 0 280px;
+  width: 280px;
   max-width: 320px;
   min-width: 240px;
   min-height: 0;
@@ -880,19 +945,16 @@ watch(
   border-bottom: 1px solid #e0e3e7;
 }
 
-.contact-item {
-  border-bottom: 1px solid #e0e3e7;
-}
-
-.contact-item:last-child {
-  border-bottom: none;
-}
-
 .contacts-list {
   flex: 1;
   min-height: 0;
 }
 
+.contact-item {
+  border-bottom: 1px solid #e0e3e7;
+}
+
+/* RIGHT CONVERSATION PANEL */
 .conversation-panel {
   flex: 1;
   display: flex;
@@ -900,46 +962,65 @@ watch(
   min-height: 0;
 }
 
+/* Header ABOVE messages */
 .header-bar {
   flex-shrink: 0;
-  border-bottom: 1px solid #e0e3e7;
+  margin-left: 5px;
   background: white;
-  margin-left: 1px;
+  border-bottom: 1px solid #e0e3e7;
+  position: relative;
 }
 
-.contact-header {
-  flex: 1;
-  min-width: 0;
-}
-
-.contact-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* BODY: scroll area + input bar */
 .conversation-body {
   flex: 1;
   min-height: 0;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
+/* MESSAGE SCROLL AREA */
 .message-scroll {
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
+/* Message list spacing */
 .message-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+.header-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.header-logo img {
+  height: 56px;
+  width: 56px;
+}
+
+.header-logo__caption {
+  font-size: 10px;
+  color: #777;
+  line-height: 1.2;
+}
+
+/* Message bubbles */
 .message-item {
-  border-radius: 8px;
   padding: 12px;
+  border-radius: 8px;
 }
 
 .msg-self {
@@ -952,12 +1033,22 @@ watch(
   align-self: flex-start;
 }
 
+/* INPUT BAR */
 .input-bar {
   flex-shrink: 0;
+  display: flex;
   border-top: 1px solid #ddd;
   background: #fafafa;
-  margin-left: 1px;
-  margin-bottom: 1px;
+  padding: 6px 10px !important;
+}
+
+/* Make the input smaller/cleaner */
+.input-bar .q-input {
+  min-height: 34px !important;
+}
+
+.input-bar .q-input textarea {
+  padding: 4px !important;
+  line-height: 1.2 !important;
 }
 </style>
-
