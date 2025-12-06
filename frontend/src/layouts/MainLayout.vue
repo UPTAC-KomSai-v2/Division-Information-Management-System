@@ -17,36 +17,9 @@
           round
           icon="chat"
           class="q-mr-xs"
+          @click="$router.push('/app/messages')"
         >
           <q-badge v-if="unreadCount" color="negative" floating>{{ unreadCount }}</q-badge>
-          <q-menu anchor="bottom right" self="top right">
-            <q-list style="min-width: 260px">
-              <q-item v-for="msg in messages" :key="msg.id" clickable>
-                <q-item-section avatar>
-                  <q-avatar :color="msg.avatarColor" text-color="black">
-                    <span class="text-weight-bold">{{ msg.initials }}</span>
-                  </q-avatar>
-                </q-item-section>
-                <q-item-section>
-                  <div class="row items-center justify-between">
-                    <div class="text-weight-bold">{{ msg.from }}</div>
-                    <span class="text-caption text-grey">{{ msg.time }}</span>
-                  </div>
-                  <div class="text-body2 ellipsis">{{ msg.preview }}</div>
-                </q-item-section>
-                <q-item-section side>
-                  <q-badge v-if="msg.unread" color="secondary" />
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item clickable @click="$router.push('/app/messages')">
-                <q-item-section class="text-primary text-weight-bold">View all messages</q-item-section>
-                <q-item-section side>
-                  <q-icon name="chevron_right" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
         </q-btn>
 
         <q-btn-dropdown class="q-mx-xs" dense flat round icon="person" >
@@ -106,35 +79,7 @@ localStorage.setItem('role', 'admin')
 const userRole = localStorage.getItem('role') || 'user'
 const userAdmin = userRole === 'admin'
 
-const messages = ref([
-  {
-    id: 1,
-    from: 'Sarah Smith',
-    preview: 'Can you review the updated roster before noon?',
-    time: '09:20 AM',
-    initials: 'SS',
-    avatarColor: 'bg-orange-2 text-orange-10',
-    unread: true
-  },
-  {
-    id: 2,
-    from: 'Operations Leads',
-    preview: 'Reminder: inspection team is on campus Thursday.',
-    time: 'Yesterday',
-    initials: 'OL',
-    avatarColor: 'bg-green-2 text-green-10',
-    unread: false
-  },
-  {
-    id: 3,
-    from: 'Helpdesk',
-    preview: 'Ticket #TCK-004 has been closed.',
-    time: 'Mon',
-    initials: 'HD',
-    avatarColor: 'bg-blue-2 text-blue-10',
-    unread: false
-  }
-])
+const messages = ref([])
 
 const router = useRouter()
 

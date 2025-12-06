@@ -1,0 +1,14 @@
+Django==5.2.9
+djangorestframework==3.15.2
+django-cors-headers==4.6.0
+djangorestframework-simplejwt==5.3.1
+psycopg[binary]>=3.2.0
+Pillow>=10.0.0
+channels==4.1.0
+# For production, back channels with Redis; in development you can use the in-memory layer
+channels-redis==4.2.0
+
+# Optional: For report generation (install as needed)
+# reportlab>=4.0.0  # For PDF export - run: python -m pip install reportlab
+# openpyxl>=3.1.0   # For Excel export - run: python -m pip install openpyxl
+

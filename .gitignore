@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Virtual environments
+.venv/
+backend/.venv/
+venv/
+
+# Editor/project files
+.vscode/
+.DS_Store

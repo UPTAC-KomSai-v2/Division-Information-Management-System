@@ -1,7 +1,7 @@
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/login',
   },
 
   {
@@ -21,14 +21,13 @@ const routes = [
 
   {
     path: '/login',
-    component: () => import('src/pages/LoginPage.vue')
+    component: () => import('src/pages/LoginPage.vue'),
   },
 
   {
     path: '/forgot-password',
-    component: () => import('src/pages/PSForgotPage.vue')
+    component: () => import('src/pages/PSForgotPage.vue'),
   },
-
 
   {
     path: '/:catchAll(.*)*',

@@ -1,0 +1,142 @@
+================================================================================
+                    ALL API ENDPOINTS - COMPLETE LIST
+================================================================================
+
+Base URL: http://127.0.0.1:8000
+
+⚠️  Note: Root URL (/) shows 404 - This is NORMAL! All endpoints are under /api/
+
+================================================================================
+AUTHENTICATION
+================================================================================
+POST   /api/auth/login/              - Login and get JWT token
+POST   /api/auth/refresh/            - Refresh JWT token  
+GET    /api/auth/me/                 - Get current user info
+
+================================================================================
+DOCUMENTS
+================================================================================
+GET    /api/documents/               - List documents
+POST   /api/documents/               - Upload document
+GET    /api/documents/{id}/          - Get document details
+PATCH  /api/documents/{id}/          - Update document
+PUT    /api/documents/{id}/          - Full update document
+DELETE /api/documents/{id}/          - Delete document
+GET    /api/documents/{id}/download/ - Download document file
+
+Query Parameters:
+  ?search=keyword                    - Search documents
+  ?type=PUBLICATION                  - Filter by type
+  ?access=PUBLIC                     - Filter by access level
+
+================================================================================
+TICKETS (Support)
+================================================================================
+GET    /api/tickets/                 - List tickets
+POST   /api/tickets/                 - Create ticket
+GET    /api/tickets/{id}/            - Get ticket details
+PATCH  /api/tickets/{id}/            - Update ticket
+PUT    /api/tickets/{id}/            - Full update ticket
+DELETE /api/tickets/{id}/            - Delete ticket
+PATCH  /api/tickets/{id}/assign/     - Assign ticket to user
+PATCH  /api/tickets/{id}/close/      - Close ticket
+
+Query Parameters:
+  ?search=keyword                    - Search tickets
+  ?status=OPEN                       - Filter by status
+  ?priority=HIGH                     - Filter by priority
+  ?assigned_to=2                     - Filter by assignee
+
+================================================================================
+EVENTS (Calendar)
+================================================================================
+GET    /api/events/                  - List events
+POST   /api/events/                  - Create event
+GET    /api/events/{id}/             - Get event details
+PATCH  /api/events/{id}/             - Update event
+PUT    /api/events/{id}/             - Full update event
+DELETE /api/events/{id}/             - Delete event
+
+Query Parameters:
+  ?date=2025-11-25                   - Filter by specific date
+  ?date_from=2025-01-01              - Filter from date
+  ?date_to=2025-12-31                - Filter to date
+  ?type=MEETING                      - Filter by event type
+  ?search=keyword                    - Search events
+  ?upcoming=true                     - Only upcoming events
+
+================================================================================
+USERS (Directory/Profiles)
+================================================================================
+GET    /api/users/                   - List users (directory)
+GET    /api/users/{id}/              - Get user profile
+PATCH  /api/users/{id}/              - Update profile
+PUT    /api/users/{id}/              - Full update profile
+
+Query Parameters:
+  ?search=keyword                    - Search users
+  ?role=STAFF                        - Filter by role
+  ?status=ACTIVE                     - Filter by status
+  ?department=IT                     - Filter by department
+
+================================================================================
+REPORTS
+================================================================================
+POST   /api/reports/generate/        - Generate report
+GET    /api/reports/                 - List generated reports
+GET    /api/reports/{id}/            - Get report details
+GET    /api/reports/{id}/export/?format=pdf   - Export to PDF
+GET    /api/reports/{id}/export/?format=excel - Export to Excel
+
+================================================================================
+FACULTY ACTIVITIES
+================================================================================
+GET    /api/faculty-activities/      - List faculty activities
+POST   /api/faculty-activities/      - Create activity record
+GET    /api/faculty-activities/{id}/ - Get activity details
+PATCH  /api/faculty-activities/{id}/ - Update activity
+PUT    /api/faculty-activities/{id}/ - Full update activity
+DELETE /api/faculty-activities/{id}/ - Delete activity
+
+================================================================================
+ADMIN (Django Admin Panel)
+================================================================================
+GET    /admin/                       - Django admin interface
+
+================================================================================
+HOW TO USE
+================================================================================
+
+1. LOGIN FIRST:
+   http://127.0.0.1:8000/api/auth/login/
+   
+   Enter your email and password to get JWT token
+
+2. USE THE TOKEN:
+   Add to request headers:
+   Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+3. TEST ENDPOINTS:
+   Visit in browser or use curl/Postman:
+   
+   http://127.0.0.1:8000/api/documents/
+   http://127.0.0.1:8000/api/tickets/
+   http://127.0.0.1:8000/api/events/
+   http://127.0.0.1:8000/api/users/
+   http://127.0.0.1:8000/api/reports/
+
+================================================================================
+QUICK TEST IN BROWSER
+================================================================================
+
+1. Go to: http://127.0.0.1:8000/api/auth/login/
+2. Enter email/password
+3. Click POST button
+4. Copy the access token
+5. Visit any endpoint above (you'll need to authenticate)
+
+Or use Django Admin:
+http://127.0.0.1:8000/admin/
+
+================================================================================
+
