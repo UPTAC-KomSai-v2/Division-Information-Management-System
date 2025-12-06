@@ -331,7 +331,23 @@ const $q = useQuasar()
 $q.screen.setSizes({ header: 0 })
 const router = useRouter()
 
-const goHome = () => router.push('/app/dashboard')
+const resizeObserverErrorHandler = (event) => {
+  const message = event?.message || ''
+  if (
+    message.includes('ResizeObserver loop completed') ||
+    message.includes('ResizeObserver loop limit exceeded')
+  ) {
+    event.preventDefault()
+    event.stopImmediatePropagation()
+  }
+}
+
+const goHome = () => {
+  // Avoid redundant navigation that can trigger ResizeObserver warnings
+  if (router.currentRoute.value.path !== '/app/dashboard') {
+    router.push('/app/dashboard')
+  }
+}
 
 const selfContact = computed(() => {
   if (!currentUserId.value) return null
@@ -865,11 +881,13 @@ onBeforeUnmount(() => {
   closeSocket()
   document.body.classList.remove('messages-page-hide-header')
   window.removeEventListener('app-logout', handleAppLogout)
+  window.removeEventListener('error', resizeObserverErrorHandler)
 })
 
 onMounted(async () => {
   document.body.classList.add('messages-page-hide-header')
   window.addEventListener('app-logout', handleAppLogout)
+  window.addEventListener('error', resizeObserverErrorHandler)
   try {
     const storedNicknames = JSON.parse(localStorage.getItem(nicknamesKey) || '{}')
     if (storedNicknames && typeof storedNicknames === 'object') {

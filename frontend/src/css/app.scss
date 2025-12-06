@@ -1,1 +1,6 @@
 // app global css in SCSS form
+
+/* Hide webpack dev-server overlay for benign ResizeObserver warnings */
+#webpack-dev-server-client-overlay {
+  display: none !important;
+}
