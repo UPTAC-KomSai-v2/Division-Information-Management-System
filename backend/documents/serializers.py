@@ -46,6 +46,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
     uploaded_by_email = serializers.EmailField(source='uploaded_by.email', read_only=True)
     file_url = serializers.SerializerMethodField()
     file_name = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Document
@@ -57,6 +58,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'created_at',
             'file_url',
             'file_name',
+            'description',
         ]
 
     def get_file_url(self, obj):
