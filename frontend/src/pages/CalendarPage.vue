@@ -34,8 +34,6 @@
                         @update:model-value="updateDateTime"/>
                 <q-time class="q-mt-md" v-model="time" format24h
                         @update:model-value="updateDateTime"/>
-                <q-time class="q-mt-md" v-model="endTime" format24h
-                        @update:model-value="updateDateTime"/>
               </q-popup-proxy>
             </q-input>
           </div>
@@ -59,6 +57,7 @@
         <div style="border: 1px solid var(--q-primary); border-radius: 8px;">
           <q-date
             v-model="selectedDate"
+            mask="YYYY-MM-DD"
             :events="events.map(e => e.date)"
             event-color="orange"
             today-btn
@@ -79,12 +78,7 @@
 
           <div v-if="filteredEvents.length">
             <q-list bordered separator class="q-mt-sm">
-              <q-item
-                clickable
-                v-for="event in filteredEvents"
-                :key="event.id"
-                @click="selectedEvent = event"
-              >
+              <q-item clickable v-for="event in filteredEvents" :key="event.id" @click="selectEvent(event)">
                 <q-item-section>{{ event.title }}</q-item-section>
               </q-item>
             </q-list>
@@ -104,8 +98,11 @@
 
           <div v-if="selectedEvent">
             <div class="text-h6 text-weight-bold">{{ selectedEvent.title }}</div>
-            <div class="text-body1">Venue: {{ selectedEvent.venue }}</div>
-            <p class="q-mt-sm">{{ selectedEvent.description }}</p>
+            <div class="text-body1" v-if="selectedEvent.venue">Venue: {{ selectedEvent.venue }}</div>
+            <div class="text-body1" v-if="selectedEvent.start_time">
+              Time: {{ selectedEvent.start_time }}<span v-if="selectedEvent.end_time"> - {{ selectedEvent.end_time }}</span>
+            </div>
+            <p class="q-mt-sm" v-if="selectedEvent.description">{{ selectedEvent.description }}</p>
           </div>
 
           <div v-else class="text-grey-6 text-caption">
@@ -121,6 +118,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { api } from 'boot/axios'
+import { useQuasar } from 'quasar'
 
 defineProps({
   isAdmin: Boolean
@@ -133,6 +131,7 @@ const selectedDate = ref(new Date().toISOString().slice(0, 10))
 const selectedEvent = ref(null)
 
 const events = ref([])
+const $q = useQuasar()
 
 /* -------------------------
     LOAD EVENTS FROM BACKEND
@@ -141,8 +140,13 @@ async function loadEvents() {
   try {
     const res = await api.get('/api/events/')
     events.value = res.data
+    // Keep selection consistent with refreshed list
+    if (selectedDate.value && !events.value.some(e => e.date === selectedDate.value)) {
+      selectedEvent.value = null
+    }
   } catch (e) {
     console.error("Failed to load events:", e)
+    $q.notify({ type: 'negative', message: 'Unable to load events' })
   }
 }
 
@@ -172,26 +176,43 @@ const time = ref('')
 function updateDateTime() {
   if (date.value && time.value) {
     dateTime.value = `${date.value} ${time.value}`
+    showPicker.value = false
   }
 }
 
 async function submitEvent() {
+  if (!ename.value || !date.value) {
+    $q.notify({ type: 'warning', message: 'Please provide at least a title and date.' })
+    return
+  }
+
+  const normalizeTime = (t) => {
+    if (!t) return null
+    // Django TimeField accepts HH:MM:SS; append seconds if missing
+    return /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t
+  }
+
   try {
-    await api.post('/api/events/', {
-      title: ename.value,
-      description: edesc.value,
+    const res = await api.post('/api/events/', {
+      title: ename.value.trim(),
+      description: edesc.value.trim(),
       date: date.value,
-      start_time: time.value,
-      end_time: endTime.value,
-      venue: evenue.value
+      start_time: normalizeTime(time.value),
+      end_time: normalizeTime(endTime.value),
+      venue: evenue.value.trim() || null
     })
 
     addEvent.value = false
     resetForm()
-    loadEvents()
+    selectedDate.value = date.value
+    await loadEvents()
+    await selectEvent(res.data) // pick the newly created one
+    $q.notify({ type: 'positive', message: 'Event added' })
 
   } catch (e) {
-    console.error("Failed to create event:", e)
+    console.error("Failed to create event:", e?.response?.data || e)
+    const detail = e?.response?.data ? JSON.stringify(e.response.data) : 'Failed to add event'
+    $q.notify({ type: 'negative', message: detail })
   }
 }
 
@@ -203,5 +224,16 @@ function resetForm() {
   date.value = ''
   time.value = ''
   endTime.value = ''
+}
+
+async function selectEvent(event) {
+  selectedDate.value = event.date
+  try {
+    const res = await api.get(`/api/events/${event.id}/`)
+    selectedEvent.value = res.data
+  } catch {
+    // Fallback to list item if detail fails (e.g., permission)
+    selectedEvent.value = event
+  }
 }
 </script>
