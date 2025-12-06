@@ -84,7 +84,7 @@
             <template v-slot:body-cell-title="props">
               <q-td clickable @click="openDetails(props.row)" class="cursor-pointer">
                 <div class="text-weight-bold">
-                  {{ props.row.title }}
+                  {{ props.row.name || props.row.title }}
                 </div>
               </q-td>
             </template>
@@ -131,7 +131,7 @@
             <template v-slot:body-cell-title="props">
               <q-td clickable @click="openDetails(props.row)" class="cursor-pointer">
                 <div class="text-weight-bold">
-                  {{ props.row.title }}
+                  {{ props.row.name || props.row.title }}
                 </div>
               </q-td>
             </template>
@@ -197,7 +197,7 @@ const filter = ref("")
 const rows = ref([])
 
 const columns = [
-  { name: "title", label: "Title", field: "title", align: "left", sortable: true },
+  { name: "title", label: "Title", field: "name", align: "left", sortable: true },
   { name: "date", label: "Date Uploaded", field: "created_at", align: "left", sortable: true },
   { name: "actions", label: "Actions", field: "actions", align: "right" }
 ]
@@ -210,7 +210,7 @@ const description = ref("")
 const uploader = ref(null)
 const selectedFile = ref(null)
 const detailsDialog = ref(false)
-const tab = ref('announcements')
+const tab = ref('documents')
 
 function openUploadDialog(type) {
   uploadType.value = type
@@ -272,8 +272,9 @@ function deleteFile(row) {
 /* --------------------------- LOAD --------------------------- */
 async function loadFiles() {
   try {
-    const res = await api.get("/api/files/")
-    rows.value = res.data
+    const res = await api.get("/api/documents/")
+    const raw = res.data
+    rows.value = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
   } catch (err) {
     console.error("LOAD ERROR:", err)
   }
