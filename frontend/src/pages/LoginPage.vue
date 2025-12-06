@@ -108,8 +108,8 @@ const login = async () => {
       user: response.data.user
     })
 
-    localStorage.setItem('access', response.data.access)
-    localStorage.setItem('refresh', response.data.refresh)
+    localStorage.setItem('access_token', response.data.access)
+    localStorage.setItem('refresh_token', response.data.refresh)
 
     if (response.data.user) {
       localStorage.setItem('user', JSON.stringify(response.data.user))
