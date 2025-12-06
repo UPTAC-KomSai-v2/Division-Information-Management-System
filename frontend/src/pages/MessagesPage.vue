@@ -139,7 +139,7 @@
                   </div>
                 </div>
                 <div v-if="selectedContact" class="text-caption text-grey-7">
-                  {{ selectedContact?.status || 'Offline' }}
+                  {{ presenceStatus(selectedContact) }}
                 </div>
               </div>
 
@@ -300,17 +300,18 @@ const draftMessage = ref('')
 const messages = ref([])
 const emojiMenu = ref(false)
 const emojis = [
-  '\u{1F600}', // ??
-  '\u{1F602}', // ??
-  '\u{1F604}', // ??
-  '\u{1F60A}', // ??
-  '\u{1F60D}', // ??
-  '\u{1F601}', // ??
-  '\u{1F44D}', // ??
-  '\u{1F64F}', // ??
-  '\u{1F389}', // ??
-  '\u2764\uFE0F', // ??
+  '\u{1F600}', // 😀
+  '\u{1F602}', // 😂
+  '\u{1F604}', // 😄
+  '\u{1F60A}', // 😊
+  '\u{1F60D}', // 😍
+  '\u{1F601}', // 😁
+  '\u{1F44D}', // 👍
+  '\u{1F64F}', // 🙏
+  '\u{1F389}', // 🎉
+  '\u2764\uFE0F', // ❤️
 ]
+const onlineUsers = ref(new Set())
 const showSettings = ref(false)
 const directory = ref([])
 const selectedContact = ref(null)
@@ -378,6 +379,34 @@ const persistNicknames = () => {
 }
 
 const findUserById = (id) => directory.value.find((u) => u.id === id)
+const presenceStatus = (contact) => {
+  if (!contact) return 'Offline'
+  const idNum = Number(contact.id)
+  return onlineUsers.value.has(idNum) ? 'Online' : 'Offline'
+}
+
+const setOnline = (id) => {
+  const num = Number(id)
+  const next = new Set(onlineUsers.value)
+  next.add(num)
+  onlineUsers.value = next
+}
+
+const setOffline = (id) => {
+  const num = Number(id)
+  const next = new Set(onlineUsers.value)
+  next.delete(num)
+  onlineUsers.value = next
+}
+
+const applyPresenceSnapshot = (ids) => {
+  const next = new Set()
+  ids.forEach((i) => {
+    const num = Number(i)
+    if (!Number.isNaN(num)) next.add(num)
+  })
+  onlineUsers.value = next
+}
 
 const isEmailLike = (val) => typeof val === 'string' && val.includes('@')
 
@@ -790,6 +819,17 @@ watch(
       try {
         const data = JSON.parse(evt.data)
 
+        if (data?.event === 'presence_snapshot' && Array.isArray(data.online)) {
+          applyPresenceSnapshot(data.online)
+          return
+        }
+
+        if (data?.event === 'presence' && data.user_id) {
+          if (data.status === 'online') setOnline(data.user_id)
+          else if (data.status === 'offline') setOffline(data.user_id)
+          return
+        }
+
         // Handle deletion event
         if (data?.event === 'chat_deleted' && data.room) {
           messages.value = messages.value.filter((m) => m.room !== data.room)
@@ -824,10 +864,12 @@ onBeforeUnmount(() => {
   stopHistoryPolling()
   closeSocket()
   document.body.classList.remove('messages-page-hide-header')
+  window.removeEventListener('app-logout', handleAppLogout)
 })
 
 onMounted(async () => {
   document.body.classList.add('messages-page-hide-header')
+  window.addEventListener('app-logout', handleAppLogout)
   try {
     const storedNicknames = JSON.parse(localStorage.getItem(nicknamesKey) || '{}')
     if (storedNicknames && typeof storedNicknames === 'object') {
@@ -920,6 +962,13 @@ onMounted(async () => {
   await nextTick()
   scrollToBottom()
 })
+
+function handleAppLogout() {
+  stopHistoryPolling()
+  closeSocket()
+  selectedContact.value = null
+  messages.value = []
+}
 
 watch(
   () => currentUserId.value,

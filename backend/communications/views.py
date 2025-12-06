@@ -26,6 +26,7 @@ from accounts.models import User
 from rest_framework.views import APIView
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import redis
 
 
 class CommunicationPermission(permissions.BasePermission):
@@ -175,6 +176,60 @@ def _user_in_room(room_key: str, user_id: int) -> bool:
         return user_id in participants
     except Exception:
         return False
+
+
+class PresenceOfflineView(APIView):
+    """
+    Explicitly mark the current user offline (used on logout).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user_id = request.user.id
+        r = redis.Redis(host="127.0.0.1", port=6379, decode_responses=True)
+        r.delete(f"presence:count:{user_id}")
+        r.srem("presence:online_users", user_id)
+
+        payload = {"event": "presence", "user_id": user_id, "status": "offline"}
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                "presence",
+                {"type": "presence.update", "payload": payload},
+            )
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user_id}",
+                {"type": "presence.update", "payload": payload},
+            )
+
+        return Response({"status": "offline"})
+
+
+class PresenceOnlineView(APIView):
+    """
+    Explicitly mark the current user online (used on login).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user_id = request.user.id
+        r = redis.Redis(host="127.0.0.1", port=6379, decode_responses=True)
+        r.set(f"presence:count:{user_id}", 1)
+        r.sadd("presence:online_users", user_id)
+
+        payload = {"event": "presence", "user_id": user_id, "status": "online"}
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                "presence",
+                {"type": "presence.update", "payload": payload},
+            )
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user_id}",
+                {"type": "presence.update", "payload": payload},
+            )
+
+        return Response({"status": "online"})
 
 
 class ChatHistoryView(APIView):

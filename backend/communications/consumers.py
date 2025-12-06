@@ -1,6 +1,7 @@
 import json
 from urllib.parse import parse_qs
 
+import redis.asyncio as aioredis
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.contrib.auth import get_user_model
@@ -37,21 +38,36 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         self.group_name = f"chat_{self.room}"
         self.user_group = f"user_{self.user.id}"
+        self.presence_group = "presence"
+
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        # Join a per-user group so we can broadcast deletions even when not in this room
+        # Join a per-user group so we can broadcast deletions/presence even when not in this room
         await self.channel_layer.group_add(self.user_group, self.channel_name)
+        await self.channel_layer.group_add(self.presence_group, self.channel_name)
+
+        online_now = await self._mark_online(self.user.id)
+        if online_now:
+            await self._broadcast_presence(self.user.id, "online")
+
         await self.accept()
 
         # send recent history
         history = await self._get_recent_messages()
         for msg in history:
             await self.send_json(self._serialize_message(msg))
+        await self._send_presence_snapshot()
 
     async def disconnect(self, close_code):
         if hasattr(self, "group_name"):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
         if hasattr(self, "user_group"):
             await self.channel_layer.group_discard(self.user_group, self.channel_name)
+        if hasattr(self, "presence_group"):
+            await self.channel_layer.group_discard(self.presence_group, self.channel_name)
+
+        went_offline = await self._mark_offline(self.user.id)
+        if went_offline:
+            await self._broadcast_presence(self.user.id, "offline")
 
     async def receive_json(self, content, **kwargs):
         text = (content.get("text") or "").strip()
@@ -76,6 +92,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def chat_deletion(self, event):
         # Broadcast deletion event to clients in the room
+        await self.send_json(event["payload"])
+
+    async def presence_update(self, event):
         await self.send_json(event["payload"])
 
     # Helpers
@@ -103,6 +122,61 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return user_id in ints
         except Exception:
             return False
+
+    def _redis(self):
+        # Assumes Redis is reachable at default host/port; adjust if needed.
+        return aioredis.from_url("redis://127.0.0.1:6379", decode_responses=True)
+
+    async def _mark_online(self, user_id: int) -> bool:
+        """
+        Mark user online (idempotent).
+        Returns True if user transitioned to online.
+        """
+        r = self._redis()
+        existed = await r.exists(f"presence:count:{user_id}")
+        # set a TTL so stale entries self-clean if the process crashes (5 minutes)
+        await r.set(f"presence:count:{user_id}", 1, ex=300)
+        await r.sadd("presence:online_users", user_id)
+        return not existed
+
+    async def _mark_offline(self, user_id: int) -> bool:
+        """
+        Mark user offline (idempotent).
+        Returns True if user transitioned to offline.
+        """
+        r = self._redis()
+        existed = await r.delete(f"presence:count:{user_id}")
+        await r.srem("presence:online_users", user_id)
+        return bool(existed)
+
+    async def _send_presence_snapshot(self):
+        """Send current online users snapshot to this client, pruning stale entries."""
+        try:
+            r = self._redis()
+            online = await r.smembers("presence:online_users")
+            alive = []
+            for uid in online:
+                ttl = await r.ttl(f"presence:count:{uid}")
+                if ttl is None or ttl < 0:
+                    # stale, drop from set
+                    await r.srem("presence:online_users", uid)
+                    await r.delete(f"presence:count:{uid}")
+                else:
+                    alive.append(uid)
+            await self.send_json({"event": "presence_snapshot", "online": alive})
+        except Exception:
+            pass
+
+    async def _broadcast_presence(self, user_id: int, status: str):
+        payload = {"event": "presence", "user_id": user_id, "status": status}
+        await self.channel_layer.group_send(
+            self.presence_group,
+            {"type": "presence.update", "payload": payload},
+        )
+        await self.channel_layer.group_send(
+            f"user_{user_id}",
+            {"type": "presence.update", "payload": payload},
+        )
 
     @database_sync_to_async
     def _create_message(self, text):
