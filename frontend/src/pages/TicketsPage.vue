@@ -27,7 +27,7 @@
 
         <q-card-section>
           <q-input class="q-pa-sm" v-model="tktTitle" label="Title" outlined />
-          <q-input class="q-pa-sm" v-model="tktDesc" label="Description" outlined />
+          <q-input class="q-pa-sm" v-model="tktDesc" type="textarea" autogrow label="Description" outlined />
           <q-select
             class="q-pa-sm"
             v-model="tktPriority"
@@ -149,7 +149,8 @@ const filteredTickets = computed(() => {
   if (!search.value) return tickets.value
   return tickets.value.filter(t =>
     (t.title || '').toLowerCase().includes(search.value.toLowerCase()) ||
-    (t.ticket_id || '').toLowerCase().includes(search.value.toLowerCase())
+    (t.ticket_id || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (t.description || '').toLowerCase().includes(search.value.toLowerCase())
   )
 })
 

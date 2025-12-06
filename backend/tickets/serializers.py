@@ -36,6 +36,7 @@ class TicketListSerializer(serializers.ModelSerializer):
     """Simplified serializer for list views"""
     creator = serializers.CharField(source='created_by.email', read_only=True)
     date = serializers.DateTimeField(source='created_at', read_only=True)
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = Ticket
@@ -45,6 +46,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             'title',
             'status',
             'priority',
+            'description',
             'creator',
             'date',
             'created_at',
