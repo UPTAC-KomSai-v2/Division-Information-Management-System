@@ -192,22 +192,22 @@
                   </q-input>
                 </div>
               </div>
-              <q-select dense outlined v-model="type" :options="choices" label="Unit" lazy-rules :rules="[ val => val && val.length > 0 || 'Please select choice']"/>
-              <q-btn class="bg-primary text-white" icon="text_snippet" @click="$router.push('/app/admin')">Generate Report</q-btn>            
+              <q-select dense outlined v-model="type" :options="choices" label="Unit" />
+              <q-btn class="bg-primary text-white" icon="text_snippet" @click="generateReport">Generate Report</q-btn>            
             </div>
             <div class="col-12 col-md-6 q-pa-md">
               <q-card class="no-shadow" style="border: 1px solid var(--q-primary); border-radius: 8px;">
                 <q-table
                   title="Report Preview"
-                  :rows="rows"
+                  :rows="previewRows"
                   :columns="columns"
                   row-key="id"
                   :filter="filter"
                   flat
                 >
                   <template v-slot:top-right>
-                    <q-btn outline class="text-primary q-mx-xs" icon="article" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')"> PDF </q-btn>
-                    <q-btn outline class="text-primary q-mx-xs" icon="dataset" style="font-family: Arial, Helvetica, sans-serif;" @click="$router.push('/app/upload')"> Excel</q-btn>
+                    <q-btn outline class="text-primary q-mx-xs" icon="article" style="font-family: Arial, Helvetica, sans-serif;" @click="exportAsCSV('report.pdf')"> PDF </q-btn>
+                    <q-btn outline class="text-primary q-mx-xs" icon="dataset" style="font-family: Arial, Helvetica, sans-serif;" @click="exportAsCSV('report.xlsx')"> Excel</q-btn>
                   </template>
 
                   <template v-slot:body-cell-facultyName="props">
@@ -274,6 +274,13 @@ const eventDates = computed(() =>
     .map((e) => e.date || e.start_date || e.startDate || e.created_at?.slice(0, 10))
     .filter(Boolean),
 )
+const dateFrom = ref('')
+const dateTo = ref('')
+const showFromPicker = ref(false)
+const showToPicker = ref(false)
+const type = ref('All')
+const filter = ref('')
+const previewRows = ref([])
 
 onMounted(() => {
   api.get("/api/events/")
@@ -321,16 +328,53 @@ onMounted(() => {
 })
 
 
-const type = ref(null)
-
-const choices = [
-  'Meeting',
-  'Workshop',
-  'Seminar',
-  'Maintenance'
+const sampleRows = [
+  {
+    id: 1,
+    facultyName: 'John Doe',
+    unit: 'Computer Science',
+    publications: 5,
+    serviceHours: 32,
+    trainingsAttended: 3,
+    date: '2025-12-01',
+  },
+  {
+    id: 2,
+    facultyName: 'Sarah Smith',
+    unit: 'Mathematics',
+    publications: 2,
+    serviceHours: 20,
+    trainingsAttended: 1,
+    date: '2025-12-03',
+  },
+  {
+    id: 3,
+    facultyName: 'Michael Brown',
+    unit: 'Physics',
+    publications: 4,
+    serviceHours: 15,
+    trainingsAttended: 2,
+    date: '2025-12-05',
+  },
+  {
+    id: 4,
+    facultyName: 'Emily White',
+    unit: 'Biology',
+    publications: 1,
+    serviceHours: 10,
+    trainingsAttended: 4,
+    date: '2025-12-08',
+  },
+  {
+    id: 5,
+    facultyName: 'David Lee',
+    unit: 'Chemistry',
+    publications: 3,
+    serviceHours: 25,
+    trainingsAttended: 2,
+    date: '2025-12-10',
+  },
 ]
-
-const filter = ref('')
 
 // 1. Define Table Columns
 const columns = [
@@ -374,46 +418,46 @@ const columns = [
 
 
 // 2. Define Dummy Data
-const rows = [
-  {
-    id: 1,
-    facultyName: 'John Doe',
-    unit: 'Computer Science',
-    publications: 5,
-    serviceHours: 32,
-    trainingsAttended: 3
-  },
-  {
-    id: 2,
-    facultyName: 'Sarah Smith',
-    unit: 'Mathematics',
-    publications: 2,
-    serviceHours: 20,
-    trainingsAttended: 1
-  },
-  {
-    id: 3,
-    facultyName: 'Michael Brown',
-    unit: 'Physics',
-    publications: 4,
-    serviceHours: 15,
-    trainingsAttended: 2
-  },
-  {
-    id: 4,
-    facultyName: 'Emily White',
-    unit: 'Biology',
-    publications: 1,
-    serviceHours: 10,
-    trainingsAttended: 4
-  },
-  {
-    id: 5,
-    facultyName: 'David Lee',
-    unit: 'Chemistry',
-    publications: 3,
-    serviceHours: 25,
-    trainingsAttended: 2
-  }
-]
+const rows = ref(sampleRows)
+
+const choices = computed(() => ['All', ...Array.from(new Set(rows.value.map((r) => r.unit)))])
+
+const filteredRows = computed(() => {
+  return rows.value.filter((r) => {
+    const passUnit = !type.value || type.value === 'All' || r.unit === type.value
+    const passFrom = !dateFrom.value || new Date(r.date) >= new Date(dateFrom.value)
+    const passTo = !dateTo.value || new Date(r.date) <= new Date(dateTo.value)
+    return passUnit && passFrom && passTo
+  })
+})
+
+function generateReport() {
+  previewRows.value = filteredRows.value
+}
+
+function exportAsCSV(filename) {
+  const data = previewRows.value.length ? previewRows.value : rows.value
+  if (!data.length) return
+  const headers = ['Faculty Name', 'Unit', 'Publications', 'Service Hours', 'Trainings Attended', 'Date']
+  const lines = data.map((r) =>
+    [r.facultyName, r.unit, r.publications, r.serviceHours, r.trainingsAttended, r.date || ''].join(','),
+  )
+  const csv = [headers.join(','), ...lines].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = filename || 'report.csv'
+  link.click()
+  URL.revokeObjectURL(link.href)
+}
+
+function updateDateFrom(val) {
+  dateFrom.value = val
+  showFromPicker.value = false
+}
+
+function updateDateTo(val) {
+  dateTo.value = val
+  showToPicker.value = false
+}
 </script>
