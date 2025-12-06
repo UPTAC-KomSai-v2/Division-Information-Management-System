@@ -2,7 +2,7 @@ import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000', // Django backend
+  baseURL: 'http://192.168.1.76:8000', // Django backend host (update if backend IP changes)
 })
 
 export default boot(({ app }) => {
@@ -11,7 +11,7 @@ export default boot(({ app }) => {
 })
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('access_token')
+  const token = localStorage.getItem('access')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }

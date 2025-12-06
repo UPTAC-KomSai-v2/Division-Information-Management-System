@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-from datetime import timedelta
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,7 +27,7 @@ SECRET_KEY = 'django-insecure-20rb-(actz6*^6wwb=blsa3z6*uzrjhz$m%fzc=mt76gd1&^1!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.1.76", "127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -170,15 +169,12 @@ REST_FRAMEWORK = {
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            # Redis running on the backend host; adjust if using a different server/port
+            'hosts': [('127.0.0.1', 6379)],
+        },
     },
-    # For production, switch to Redis:
-    # 'default': {
-    #     'BACKEND': 'channels_redis.core.RedisChannelLayer',
-    #     'CONFIG': {
-    #         'hosts': [('127.0.0.1', 6379)],
-    #     },
-    # },
 }
 
 SIMPLE_JWT = {
