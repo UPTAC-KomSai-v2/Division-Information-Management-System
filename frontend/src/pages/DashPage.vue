@@ -313,7 +313,7 @@ onMounted(() => {
 const people = ref([])
 
 onMounted(() => {
-  api.get("/api/directory/")
+  api.get("/api/accounts/")
     .then(res => people.value = res.data.slice(0, 5))
     .catch(err => console.error(err))
 })
