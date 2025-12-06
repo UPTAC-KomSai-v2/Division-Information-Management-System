@@ -44,13 +44,6 @@
           </q-td>
         </template>
 
-        <template v-slot:body-cell-department="props">
-          <q-td :props="props">
-            {{ props.row.department }}
-          </q-td>
-        </template>
-
-
         <template v-slot:body-cell-status="props">
           <q-td :props="props">
             <q-chip
@@ -82,7 +75,6 @@ const filter = ref('')
 const columns = [
   { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: true },
   { name: 'role', align: 'left', label: 'Role', field: 'role', sortable: true },
-  { name: 'department', align: 'left', label: 'Department', field: 'department', sortable: true },
   { name: 'status', align: 'left', label: 'Active Status', field: 'status', sortable: true }
 ]
 

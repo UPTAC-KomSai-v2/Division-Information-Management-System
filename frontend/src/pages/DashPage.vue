@@ -67,7 +67,6 @@
                 <q-item v-for="d in documents.slice(0,5)" :key="d.id">
                   <q-item-section>
                     <div class="text-weight-bold">{{ d.name }}</div>
-                    <div class="text-caption text-grey">{{ d.type }} • {{ d.access }}</div>
                   </q-item-section>
                 </q-item>
               </template>
