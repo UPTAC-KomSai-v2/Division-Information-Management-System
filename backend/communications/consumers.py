@@ -36,7 +36,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         self.group_name = f"chat_{self.room}"
+        self.user_group = f"user_{self.user.id}"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
+        # Join a per-user group so we can broadcast deletions even when not in this room
+        await self.channel_layer.group_add(self.user_group, self.channel_name)
         await self.accept()
 
         # send recent history
@@ -47,6 +50,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         if hasattr(self, "group_name"):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        if hasattr(self, "user_group"):
+            await self.channel_layer.group_discard(self.user_group, self.channel_name)
 
     async def receive_json(self, content, **kwargs):
         text = (content.get("text") or "").strip()
@@ -67,6 +72,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def chat_message(self, event):
+        await self.send_json(event["payload"])
+
+    async def chat_deletion(self, event):
+        # Broadcast deletion event to clients in the room
         await self.send_json(event["payload"])
 
     # Helpers

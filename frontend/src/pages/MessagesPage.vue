@@ -556,16 +556,24 @@ function startNewChat() {
 
 function deleteContact() {
   if (!selectedContact.value) return
-  const id = selectedContact.value.id
-  const roomKey = `${Math.min(currentUserId.value, id)}_${Math.max(currentUserId.value, id)}`
+  $q.dialog({
+    title: 'Delete chat?',
+    message: 'This will delete the conversation history for both participants.',
+    ok: { label: 'Delete', color: 'negative' },
+    cancel: { label: 'Cancel', flat: true },
+    persistent: true,
+  }).onOk(() => {
+    const id = selectedContact.value.id
+    const roomKey = `${Math.min(currentUserId.value, id)}_${Math.max(currentUserId.value, id)}`
 
-  // best-effort delete on server; ignore errors for now
-  api.delete(`/api/chat/${roomKey}/delete/`).catch(() => {})
+    // best-effort delete on server; ignore errors for now
+    api.delete(`/api/chat/${roomKey}/delete/`).catch(() => {})
 
-  messages.value = messages.value.filter((m) => m.contactId !== id)
-  // Keep directory entry to preserve display name; just clear chat records
-  removeChattedContact(id)
-  selectedContact.value = null
+    messages.value = messages.value.filter((m) => m.contactId !== id)
+    // Keep directory entry to preserve display name; just clear chat records
+    removeChattedContact(id)
+    selectedContact.value = null
+  })
 }
 
 function changeNickname() {
@@ -781,6 +789,23 @@ watch(
     socket.value.onmessage = async (evt) => {
       try {
         const data = JSON.parse(evt.data)
+
+        // Handle deletion event
+        if (data?.event === 'chat_deleted' && data.room) {
+          messages.value = messages.value.filter((m) => m.room !== data.room)
+          removeChattedContact(selectedContact.value?.id)
+          if (
+            selectedContact.value &&
+            `${Math.min(currentUserId.value, selectedContact.value.id)}_${Math.max(
+              currentUserId.value,
+              selectedContact.value.id,
+            )}` === data.room
+          ) {
+            selectedContact.value = null
+          }
+          return
+        }
+
         recordMessage(data, { autoSelect: true })
         await nextTick()
         scrollToBottom()

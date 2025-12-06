@@ -24,6 +24,8 @@ from .serializers import (
 )
 from accounts.models import User
 from rest_framework.views import APIView
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 class CommunicationPermission(permissions.BasePermission):
@@ -188,7 +190,34 @@ class ChatHistoryView(APIView):
                 {"detail": "Not permitted to delete this conversation."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        # Parse participants from room key
+        try:
+            participants = {int(p) for p in room.split("_")}
+        except Exception:
+            participants = set()
 
         deleted_count, _ = ChatMessage.objects.filter(conversation_id=room).delete()
+
+        # Broadcast deletion to participants and the room
+        channel_layer = get_channel_layer()
+        payload = {
+            "event": "chat_deleted",
+            "room": room,
+            "by": request.user.id,
+            "deleted": deleted_count,
+        }
+        if channel_layer:
+            # room-level broadcast
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{room}",
+                {"type": "chat.deletion", "payload": payload},
+            )
+            # per-user broadcast
+            for uid in participants:
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{uid}",
+                    {"type": "chat.deletion", "payload": payload},
+                )
+
         return Response({"deleted": deleted_count})
 
