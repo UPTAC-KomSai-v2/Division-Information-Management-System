@@ -61,13 +61,7 @@
             <div class="q-pa-sm pane-controls">
               <div class="row items-center q-gutter-sm no-wrap">
                 <!-- Go back to home button (DIMS logo) -->
-                <q-btn
-                  flat
-                  round
-                  dense
-                  @click="goHome"
-                  class="go-home-btn dims-home-btn"
-                >
+                <q-btn flat round dense @click="goHome" class="go-home-btn dims-home-btn">
                   <img src="~assets/dims.png" alt="DIMS logo" class="dims-logo" />
                   <q-tooltip>Click to go back to home</q-tooltip>
                 </q-btn>
@@ -275,12 +269,7 @@
                   auto-close
                 >
                   <q-list dense style="min-width: 160px">
-                    <q-item
-                      v-for="em in emojis"
-                      :key="em"
-                      clickable
-                      @click="insertEmoji(em)"
-                    >
+                    <q-item v-for="em in emojis" :key="em" clickable @click="insertEmoji(em)">
                       <q-item-section>{{ em }}</q-item-section>
                     </q-item>
                   </q-list>
@@ -325,8 +314,8 @@ const showSettings = ref(false)
 const directory = ref([])
 const selectedContact = ref(null)
 const socket = ref(null)
-const apiBase = 'http://192.168.1.76:8000/api'
-const wsBase = 'ws://192.168.1.76:8000'
+const apiBase = 'http://10.12.49.180:8000/api'
+const wsBase = 'ws://10.12.49.180:8000'
 const currentUserId = ref(null)
 const chattedIdsKey = 'chatted_contact_ids_v3'
 const chattedIdsStore = ref({})

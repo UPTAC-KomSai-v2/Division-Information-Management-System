@@ -2,7 +2,7 @@ import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.76:8000', // Django backend host (update if backend IP changes)
+  baseURL: 'http://10.12.49.180:8000', // Django backend host (update if backend IP changes)
 })
 
 // Silence noisy ResizeObserver loop errors that bubble to the dev-server overlay
